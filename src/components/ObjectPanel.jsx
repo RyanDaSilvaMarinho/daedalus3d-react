@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 const ObjectPanel = ({ show, onSelectType }) => {
   const [model, setModel] = useState(null);
-  const [color, setColor] = useState('#00ff88'); // Cor padrão
+  const [color, setColor] = useState('#00ff88'); // Cor padrão
 
   const handleFileChange = (event) => { /* ... */ };
 
@@ -30,7 +30,7 @@ const ObjectPanel = ({ show, onSelectType }) => {
         />
       </div>
 
-      {/* Botões de Formato */}
+      {/* Botões de Formato */}
       <div>
         <button onClick={() => handleAddWithColor('cube')} className="shape-btn">
           Cubo
@@ -58,4 +58,4 @@ const ObjectPanel = ({ show, onSelectType }) => {
   );
 };
 
-export default ObjectPanel;
+export default ObjectPanel;

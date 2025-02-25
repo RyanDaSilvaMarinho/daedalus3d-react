@@ -122,7 +122,7 @@ body {
   background-color: #2f5875;
 }
 
-/* Properties Panel */
+/* ========== [SIDEBAR DIREITA - PROPERTIES PANEL] ========== */
 .properties-panel {
   width: 300px;
   background-color: #163040;
@@ -133,8 +133,10 @@ body {
   gap: 1rem;
   position: absolute;
   right: 20px;
-  top: 80px;
+  top: 120px; /* Alterado de 80px para 120px */
+  height: calc(100vh - 140px); /* Ajuste proporcional */
   z-index: 10;
+  overflow-y: auto; /* Adicionado scroll se necessário */
 }
 
 .properties-card {
@@ -148,6 +150,8 @@ body {
   font-size: 0.9rem;
   color: #00ff9d;
 }
+
+/* ========== [FIM DA SIDEBAR DIREITA] ========== */
 
 /* Object Panel */
 #object-panel {
@@ -295,7 +299,7 @@ textarea {
   opacity: 0.9;
 }
 
-/* Responsividade */
+/* ========== [RESPONSIVIDADE] ========== */
 @media (max-width: 768px) {
   #object-panel {
     left: 20px;
@@ -305,10 +309,36 @@ textarea {
   .properties-panel {
     width: 260px;
     right: 10px;
+    top: 100px !important; /* Ajuste para mobile */
+    height: calc(100vh - 120px);
   }
 
   .header {
     flex-direction: column;
     gap: 1rem;
+  }
+
+  .menu-item {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    transition: opacity 0.2s;
+  }
+
+  .menu-item:hover {
+    opacity: 0.8;
+  }
+
+  .selection-status {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background: #163040;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    z-index: 1000;
   }
 }

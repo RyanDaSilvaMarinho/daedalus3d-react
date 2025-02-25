@@ -11,7 +11,7 @@ const App = () => {
   const [objects, setObjects] = useState([]);
   const [modelFile, setModelFile] = useState(null);
 
-  // Função atualizada para receber tipo e cor
+  // Função atualizada para receber tipo e cor
   const handleAddObject = (type, color = '#00ff88') => {
     const newObject = {
       type,
@@ -47,7 +47,7 @@ const App = () => {
       </div>
       <ObjectPanel 
         show={showObjectPanel}
-        onSelectType={handleAddObject} // Passa a função atualizada
+        onSelectType={handleAddObject} // Passa a função atualizada
       />
       <div className="properties-panel">
         <div className="properties-card">
@@ -79,4 +79,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default App;

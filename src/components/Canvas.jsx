@@ -12,7 +12,7 @@ const Canvas = ({ objects, modelFile }) => {
   const objectsRef = useRef([]);
 
   useEffect(() => {
-    // Configuração inicial
+    // Configuração inicial
     const scene = sceneRef.current;
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -30,7 +30,7 @@ const Canvas = ({ objects, modelFile }) => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     rendererRef.current = renderer;
 
-    // Iluminação
+    // Iluminação
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(5, 5, 5);
@@ -46,7 +46,7 @@ const Canvas = ({ objects, modelFile }) => {
     controls.enableDamping = true;
     controlsRef.current = controls;
 
-    // Animação
+    // Animação
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -89,9 +89,9 @@ const Canvas = ({ objects, modelFile }) => {
           return;
       }
 
-      // Material com cor dinâmica
+      // Material com cor dinâmica
       const material = new THREE.MeshStandardMaterial({
-        color: obj.color, // Cor definida pelo usuário
+        color: obj.color, // Cor definida pelo usuário
         metalness: 0.3,
         roughness: 0.7
       });
@@ -126,4 +126,4 @@ const Canvas = ({ objects, modelFile }) => {
   return <canvas ref={canvasRef} />;
 };
 
-export default Canvas;
+export default Canvas;
