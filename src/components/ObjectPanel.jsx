@@ -1,19 +1,17 @@
-// ObjectPanel.jsx
 import React, { useState } from 'react';
 
 const ObjectPanel = ({ show, onSelectType }) => {
   const [model, setModel] = useState(null);
+  const [color, setColor] = useState('#00ff88'); // Cor padrão
 
-  const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const content = reader.result;
-        setModel(content); // Armazena o conteúdo do modelo
-      };
-      reader.readAsArrayBuffer(file);
-    }
+  const handleFileChange = (event) => { /* ... */ };
+
+  const handleColorChange = (e) => {
+    setColor(e.target.value);
+  };
+
+  const handleAddWithColor = (type) => {
+    onSelectType(type, color); // Passa o tipo e a cor
   };
 
   if (!show) return null;
@@ -21,26 +19,31 @@ const ObjectPanel = ({ show, onSelectType }) => {
   return (
     <div id="object-panel" className="object-panel">
       <h3>Adicionar Objeto 3D</h3>
+      
+      {/* Seletor de Cor */}
+      <div className="color-picker">
+        <label>Cor do Objeto:</label>
+        <input
+          type="color"
+          value={color}
+          onChange={handleColorChange}
+        />
+      </div>
+
+      {/* Botões de Formato */}
       <div>
-        <button
-          onClick={() => onSelectType('cube')}
-          className="shape-btn"
-        >
+        <button onClick={() => handleAddWithColor('cube')} className="shape-btn">
           Cubo
         </button>
-        <button
-          onClick={() => onSelectType('sphere')}
-          className="shape-btn"
-        >
+        <button onClick={() => handleAddWithColor('sphere')} className="shape-btn">
           Esfera
         </button>
-        <button
-          onClick={() => onSelectType('cylinder')}
-          className="shape-btn"
-        >
+        <button onClick={() => handleAddWithColor('cylinder')} className="shape-btn">
           Cilindro
         </button>
       </div>
+
+      {/* Upload de Modelo */}
       <div>
         <label>Carregar Modelo 3D:</label>
         <input

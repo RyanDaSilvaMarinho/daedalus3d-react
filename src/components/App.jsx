@@ -1,30 +1,35 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import Header from './Header';
-import Sidebar from './Sidebar';
 import Toolbar from './Toolbar';
 import Canvas from './Canvas';
 import ObjectPanel from './ObjectPanel';
 import Timeline from './Timeline';
-import '../App.css';  // ou o caminho correto para o seu arquivo CSS
-
+import '../App.css';
 
 const App = () => {
   const [showObjectPanel, setShowObjectPanel] = useState(false);
-  const [selectedObjectType, setSelectedObjectType] = useState('cube');
-  const [sceneData, setSceneData] = useState(null);
+  const [objects, setObjects] = useState([]);
   const [modelFile, setModelFile] = useState(null);
 
-  // Função para carregar o arquivo de modelo 3D
-  const handleModelUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setModelFile(file);
-    }
+  // Função atualizada para receber tipo e cor
+  const handleAddObject = (type, color = '#00ff88') => {
+    const newObject = {
+      type,
+      color,
+      id: Date.now(),
+      position: [
+        Math.random() * 20 - 10,
+        0,
+        Math.random() * 20 - 10
+      ]
+    };
+    setObjects(prev => [...prev, newObject]);
   };
 
-  const handleSceneReady = useCallback((data) => {
-    setSceneData(data);
-  }, []);
+  const handleModelUpload = (e) => {
+    const file = e.target.files[0];
+    file && setModelFile(file);
+  };
 
   return (
     <div className="app-container">
@@ -36,64 +41,38 @@ const App = () => {
           showObjectPanel={showObjectPanel}
         />
         <Canvas 
-          onSceneReady={handleSceneReady} 
-          modelFile={modelFile} 
+          objects={objects}
+          modelFile={modelFile}
         />
       </div>
       <ObjectPanel 
         show={showObjectPanel}
-        onSelectType={setSelectedObjectType}
+        onSelectType={handleAddObject} // Passa a função atualizada
       />
       <div className="properties-panel">
         <div className="properties-card">
           <h3>Texto para 3D</h3>
-          <textarea 
-            id="text-input" 
-            placeholder="Digite seu texto aqui..."
-          >
-            Lorem ipsum is simply dummy text of the printing and typesetting industry.
-          </textarea>
-
+          <textarea placeholder="Digite seu texto aqui..."></textarea>
           <div className="param-controls">
-            <div className="param-group">
-              <div className="param-item">
-                <label className="param-label" for="guidance-scale">Guidance Scale</label>
-                <input 
-                  type="number" 
-                  id="guidance-scale" 
-                  className="param-input"
-                  value="15" 
-                  min="5" 
-                  max="20"
-                />
-              </div>
-              <div className="param-item">
-                <label className="param-label" for="num-steps">Passos</label>
-                <input 
-                  type="number" 
-                  id="num-steps" 
-                  className="param-input"
-                  value="64" 
-                  min="25" 
-                  max="100"
-                />
-              </div>
+            <div className="param-item">
+              <label>Guidance Scale</label>
+              <input type="number" defaultValue="15" />
+            </div>
+            <div className="param-item">
+              <label>Passos</label>
+              <input type="number" defaultValue="64" />
             </div>
           </div>
-
-          <button className="generate-button" id="generate-text-3d">Gerar</button>
+          <button className="generate-button">Gerar</button>
         </div>
-
         <div className="properties-card">
           <h3>Imagem para 3D</h3>
-          <input 
-            type="file" 
-            id="image-input" 
-            accept="image/*" 
-            className="file-input"
-            onChange={handleModelUpload} 
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleModelUpload}
           />
-          <button className="generate-button" id="generate-image-3d">Converter</button>
+          <button className="generate-button">Converter</button>
         </div>
       </div>
     </div>

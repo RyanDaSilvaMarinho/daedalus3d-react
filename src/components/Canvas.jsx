@@ -1,71 +1,52 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
-const Canvas = ({ onSceneReady, modelFile }) => {
+const Canvas = ({ objects, modelFile }) => {
   const canvasRef = useRef(null);
-  const containerRef = useRef(null);
+  const sceneRef = useRef(new THREE.Scene());
+  const cameraRef = useRef();
+  const rendererRef = useRef();
+  const controlsRef = useRef();
+  const objectsRef = useRef([]);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
-
-    const scene = new THREE.Scene();
+    // Configuração inicial
+    const scene = sceneRef.current;
     const camera = new THREE.PerspectiveCamera(
       75,
-      containerRef.current.clientWidth / containerRef.current.clientHeight,
+      window.innerWidth / window.innerHeight,
       0.1,
       1000
     );
+    camera.position.set(15, 25, 30);
+    cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
-      antialias: true,
-      alpha: true
+      antialias: true
     });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    rendererRef.current = renderer;
 
-    // Lights
+    // Iluminação
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(5, 5, 5);
     scene.add(ambientLight, directionalLight);
 
     // Grid
-    const gridHelper = new THREE.GridHelper(100, 100, 0x0088ff, 0x001830);
-    gridHelper.position.y = -10;  // Mover o grid para baixo
+    const gridHelper = new THREE.GridHelper(30, 30, 0x444444, 0x888888);
+    gridHelper.position.y = 0;
     scene.add(gridHelper);
 
-
-    // Plane for click detection
-    const planeMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(100, 100),
-      new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, visible: false })
-    );
-    planeMesh.rotateX(-Math.PI / 2);
-    scene.add(planeMesh);
-
-    // Camera position
-    camera.position.z = 30;
-    camera.position.y = 20;
-    camera.lookAt(0, 0, 0);
-
-    // Controls
+    // Controles
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
+    controlsRef.current = controls;
 
-    // Initial resize
-    const handleResize = () => {
-      if (!containerRef.current) return;
-      const width = containerRef.current.clientWidth;
-      const height = containerRef.current.clientHeight;
-      renderer.setSize(width, height);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-    };
-    handleResize();
-
-    // Animation loop
+    // Animação
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -73,36 +54,76 @@ const Canvas = ({ onSceneReady, modelFile }) => {
     };
     animate();
 
-    // Check if there's a model file to load
-    if (modelFile) {
-      const loader = new GLTFLoader();
-      const reader = new FileReader();
-      reader.onload = () => {
-        const arrayBuffer = reader.result;
-        loader.parse(arrayBuffer, '', (gltf) => {
-          scene.add(gltf.scene);
-        }, (error) => {
-          console.error('Error loading model:', error);
-        });
-      };
-      reader.readAsArrayBuffer(modelFile);
-    }
-
-    // Notify parent component
-    onSceneReady({ scene, camera, renderer, controls });
-
-    // Cleanup
     return () => {
-      renderer.dispose();
       controls.dispose();
+      renderer.dispose();
     };
-  }, [onSceneReady, modelFile]);
+  }, []);
 
-  return (
-    <div className="canvas-container" ref={containerRef}>
-      <canvas ref={canvasRef} />
-    </div>
-  );
+  useEffect(() => {
+    const scene = sceneRef.current;
+    const loader = new GLTFLoader();
+
+    // Limpar objetos antigos
+    objectsRef.current.forEach(obj => scene.remove(obj));
+    objectsRef.current = [];
+
+    // Adicionar novos objetos com cor
+    objects.forEach(obj => {
+      let geometry, yOffset;
+
+      switch(obj.type) {
+        case 'cube':
+          geometry = new THREE.BoxGeometry(2, 2, 2);
+          yOffset = 1;
+          break;
+        case 'sphere':
+          geometry = new THREE.SphereGeometry(1.5, 32, 32);
+          yOffset = 1.5;
+          break;
+        case 'cylinder':
+          geometry = new THREE.CylinderGeometry(1, 1, 3, 32);
+          yOffset = 1.5;
+          break;
+        default:
+          return;
+      }
+
+      // Material com cor dinâmica
+      const material = new THREE.MeshStandardMaterial({
+        color: obj.color, // Cor definida pelo usuário
+        metalness: 0.3,
+        roughness: 0.7
+      });
+
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(
+        obj.position[0],
+        obj.position[1] + yOffset,
+        obj.position[2]
+      );
+      scene.add(mesh);
+      objectsRef.current.push(mesh);
+    });
+
+  }, [objects]);
+
+  useEffect(() => {
+    if (!modelFile) return;
+    
+    const loader = new GLTFLoader();
+    const reader = new FileReader();
+    
+    reader.onload = () => {
+      loader.parse(reader.result, '', gltf => {
+        sceneRef.current.add(gltf.scene);
+      });
+    };
+    reader.readAsArrayBuffer(modelFile);
+
+  }, [modelFile]);
+
+  return <canvas ref={canvasRef} />;
 };
 
 export default Canvas;
