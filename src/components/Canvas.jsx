@@ -2,8 +2,9 @@ import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
-const Canvas = ({ objects, modelFile }) => {
+const Canvas = ({ objects, modelFile, objModelFile }) => {
   const canvasRef = useRef(null);
   const sceneRef = useRef(new THREE.Scene());
   const cameraRef = useRef();
@@ -12,7 +13,6 @@ const Canvas = ({ objects, modelFile }) => {
   const objectsRef = useRef([]);
 
   useEffect(() => {
-    // Configuração inicial
     const scene = sceneRef.current;
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -30,23 +30,19 @@ const Canvas = ({ objects, modelFile }) => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     rendererRef.current = renderer;
 
-    // Iluminação
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(5, 5, 5);
     scene.add(ambientLight, directionalLight);
 
-    // Grid
     const gridHelper = new THREE.GridHelper(30, 30, 0x444444, 0x888888);
     gridHelper.position.y = 0;
     scene.add(gridHelper);
 
-    // Controles
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controlsRef.current = controls;
 
-    // Animação
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -64,11 +60,9 @@ const Canvas = ({ objects, modelFile }) => {
     const scene = sceneRef.current;
     const loader = new GLTFLoader();
 
-    // Limpar objetos antigos
     objectsRef.current.forEach(obj => scene.remove(obj));
     objectsRef.current = [];
 
-    // Adicionar novos objetos com cor
     objects.forEach(obj => {
       let geometry, yOffset;
 
@@ -89,9 +83,8 @@ const Canvas = ({ objects, modelFile }) => {
           return;
       }
 
-      // Material com cor dinâmica
       const material = new THREE.MeshStandardMaterial({
-        color: obj.color, // Cor definida pelo usuário
+        color: obj.color,
         metalness: 0.3,
         roughness: 0.7
       });
@@ -123,7 +116,33 @@ const Canvas = ({ objects, modelFile }) => {
 
   }, [modelFile]);
 
+  useEffect(() => {
+    if (!objModelFile) return;
+
+    const loader = new OBJLoader();
+    const reader = new FileReader();
+    
+    reader.onload = () => {
+      const obj = loader.parse(reader.result);
+      
+      obj.traverse(child => {
+        if (child instanceof THREE.Mesh) {
+          child.material = new THREE.MeshStandardMaterial({
+            color: 0x888888,
+            metalness: 0.3,
+            roughness: 0.7
+          });
+        }
+      });
+
+      obj.position.set(0, 0, 0);
+      sceneRef.current.add(obj);
+    };
+
+    reader.readAsText(objModelFile);
+  }, [objModelFile]);
+
   return <canvas ref={canvasRef} />;
 };
 
-export default Canvas;
+export default Canvas;

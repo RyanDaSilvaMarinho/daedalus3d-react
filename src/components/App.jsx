@@ -10,8 +10,8 @@ const App = () => {
   const [showObjectPanel, setShowObjectPanel] = useState(false);
   const [objects, setObjects] = useState([]);
   const [modelFile, setModelFile] = useState(null);
+  const [objModelFile, setObjModelFile] = useState(null);
 
-  // Função atualizada para receber tipo e cor
   const handleAddObject = (type, color = '#00ff88') => {
     const newObject = {
       type,
@@ -33,7 +33,7 @@ const App = () => {
 
   return (
     <div className="app-container">
-      <Header />
+      <Header onOBJUpload={setObjModelFile} />
       <Timeline />
       <div className="main-content">
         <Toolbar 
@@ -43,11 +43,12 @@ const App = () => {
         <Canvas 
           objects={objects}
           modelFile={modelFile}
+          objModelFile={objModelFile}
         />
       </div>
       <ObjectPanel 
         show={showObjectPanel}
-        onSelectType={handleAddObject} // Passa a função atualizada
+        onSelectType={handleAddObject}
       />
       <div className="properties-panel">
         <div className="properties-card">
@@ -79,4 +80,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default App;

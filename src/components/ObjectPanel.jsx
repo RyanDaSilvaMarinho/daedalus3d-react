@@ -2,16 +2,21 @@ import React, { useState } from 'react';
 
 const ObjectPanel = ({ show, onSelectType }) => {
   const [model, setModel] = useState(null);
-  const [color, setColor] = useState('#00ff88'); // Cor padrão
+  const [color, setColor] = useState('#00ff88');
 
-  const handleFileChange = (event) => { /* ... */ };
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setModel(file);
+    }
+  };
 
   const handleColorChange = (e) => {
     setColor(e.target.value);
   };
 
   const handleAddWithColor = (type) => {
-    onSelectType(type, color); // Passa o tipo e a cor
+    onSelectType(type, color);
   };
 
   if (!show) return null;
@@ -20,7 +25,6 @@ const ObjectPanel = ({ show, onSelectType }) => {
     <div id="object-panel" className="object-panel">
       <h3>Adicionar Objeto 3D</h3>
       
-      {/* Seletor de Cor */}
       <div className="color-picker">
         <label>Cor do Objeto:</label>
         <input
@@ -30,7 +34,6 @@ const ObjectPanel = ({ show, onSelectType }) => {
         />
       </div>
 
-      {/* Botões de Formato */}
       <div>
         <button onClick={() => handleAddWithColor('cube')} className="shape-btn">
           Cubo
@@ -43,7 +46,6 @@ const ObjectPanel = ({ show, onSelectType }) => {
         </button>
       </div>
 
-      {/* Upload de Modelo */}
       <div>
         <label>Carregar Modelo 3D:</label>
         <input
@@ -58,4 +60,4 @@ const ObjectPanel = ({ show, onSelectType }) => {
   );
 };
 
-export default ObjectPanel;
+export default ObjectPanel;
