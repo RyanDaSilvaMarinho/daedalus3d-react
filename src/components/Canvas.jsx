@@ -27,7 +27,7 @@ const Canvas = ({ objects, modelFile, objModelFile }) => {
       canvas: canvasRef.current,
       antialias: true
     });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
     rendererRef.current = renderer;
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
