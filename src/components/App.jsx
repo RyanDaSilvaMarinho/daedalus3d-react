@@ -5,6 +5,8 @@ import Canvas from './Canvas';
 import ObjectPanel from './ObjectPanel';
 import '../App.css';
 
+import { useNavigate } from "react-router-dom";
+
 const App = () => {
   const [showObjectPanel, setShowObjectPanel] = useState(false);
   const [objects, setObjects] = useState([]);
@@ -12,6 +14,12 @@ const App = () => {
   const [objModelFile, setObjModelFile] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const canvasRef = useRef();
+
+  let navigate = useNavigate(); 
+  const routeChange = (destiny) =>{ 
+    let path = destiny; 
+    navigate(path);
+  }
 
   const handleAddObject = (type, color = '#00ff88') => {
     const newObject = {
@@ -108,6 +116,9 @@ const App = () => {
           />
           <button className="generate-button">Converter</button>
         </div>
+        <button className='exit-box' onClick={() => routeChange('/')}>
+          Sair <img src='Icon-logout.svg'></img>
+        </button>
       </div>
     </div>
   );

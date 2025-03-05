@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 const Home = () => {
 
   let navigate = useNavigate(); 
-  const routeChange = () =>{ 
-    let path = `App`; 
+  const routeChange = (destiny) =>{ 
+    let path = destiny; 
     navigate(path);
   }
 
@@ -16,7 +16,7 @@ const Home = () => {
         <div className='home-projects'>
           <div className='home-recent'>
             <div className='home-new' >
-              <button className='new-project' src="new-button.svg" alt='+' onClick={routeChange}></button>
+              <button className='new-project' src="new-button.svg" alt='+' onClick={() => routeChange('App')}></button>
               <br/>Novo Projeto
             </div>
           </div>

@@ -216,6 +216,7 @@ body {
   padding: 1rem;
   border-radius: 12px;
   display: flex;
+  overflow: hidden;
   flex-direction: column;
   gap: 1rem;
   position: absolute;
@@ -238,6 +239,25 @@ body {
   font-size: 0.9rem;
   color: #FFFFFF;
 }
+
+.exit-box{
+  font-size: 1.2rem;
+  border: #FFFFFF00;
+  background-color: #FFFFFF00;
+  color: #ffffff;
+  font-family: 'Open Sans';
+  align-content: center;
+}
+
+.exit-box:hover{
+  background-color: #FFFFFF33;
+}
+
+.exit-box:active{
+  background-color: #00000033;
+}
+
+/* ========== [FIM DA SIDEBAR DIREITA] ========== */
 
 /* Object Panel */
 #object-panel {
