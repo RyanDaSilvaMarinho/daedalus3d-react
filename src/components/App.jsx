@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Header from './Header';
 import Toolbar from './Toolbar';
 import Canvas from './Canvas';
 import ObjectPanel from './ObjectPanel';
-import Timeline from './Timeline';
 import '../App.css';
 
 const App = () => {
@@ -11,6 +10,8 @@ const App = () => {
   const [objects, setObjects] = useState([]);
   const [modelFile, setModelFile] = useState(null);
   const [objModelFile, setObjModelFile] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const canvasRef = useRef();
 
   const handleAddObject = (type, color = '#00ff88') => {
     const newObject = {
@@ -31,19 +32,51 @@ const App = () => {
     file && setModelFile(file);
   };
 
+  const handleSelectObject = (id) => {
+    setSelectedIds(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(existingId => existingId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  };
+
+  const handleUnion = () => {
+    if (selectedIds.length === 2) {
+      const unionResult = canvasRef.current.performUnion(selectedIds);
+      
+      if (unionResult) {
+        setObjects(prev => [
+          ...prev.filter(obj => !unionResult.originalIds.includes(obj.id)),
+          {
+            id: unionResult.newId,
+            type: 'union',
+            color: '#00ff88',
+            position: unionResult.position
+          }
+        ]);
+      }
+      setSelectedIds([]);
+    }
+  };
+
   return (
     <div className="app-container">
       <Header onOBJUpload={setObjModelFile} />
-      <Timeline />
       <div className="main-content">
         <Toolbar 
           onAddObject={setShowObjectPanel}
           showObjectPanel={showObjectPanel}
+          onUnion={handleUnion}
+          canUnion={selectedIds.length === 2}
         />
         <Canvas 
+          ref={canvasRef}
           objects={objects}
           modelFile={modelFile}
           objModelFile={objModelFile}
+          onSelectObject={handleSelectObject}
         />
       </div>
       <ObjectPanel 

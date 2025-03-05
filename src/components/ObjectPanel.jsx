@@ -24,7 +24,7 @@ const ObjectPanel = ({ show, onSelectType }) => {
   return (
     <div id="object-panel" className="object-panel">
       <h3>Adicionar Objeto 3D</h3>
-      
+
       <div className="color-picker">
         <label>Cor do Objeto:</label>
         <input
@@ -45,17 +45,6 @@ const ObjectPanel = ({ show, onSelectType }) => {
           Cilindro
         </button>
       </div>
-
-      <div>
-        <label>Carregar Modelo 3D:</label>
-        <input
-          type="file"
-          accept=".gltf,.glb"
-          onChange={handleFileChange}
-          className="file-input"
-        />
-      </div>
-      {model && <p>Modelo carregado!</p>}
     </div>
   );
 };
