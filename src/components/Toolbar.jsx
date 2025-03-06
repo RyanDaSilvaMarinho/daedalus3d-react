@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Toolbar = ({ onAddObject, showObjectPanel, onUnion, canUnion }) => {
+const Toolbar = ({ onAddObject, showObjectPanel, onUnion, canUnion, onRotate, canRotate }) => {
   return (
     <div className="sidebar">
       <button 
@@ -15,6 +15,13 @@ const Toolbar = ({ onAddObject, showObjectPanel, onUnion, canUnion }) => {
         disabled={!canUnion}
       >
         🡇 Unir
+      </button>
+      <button
+        className="tool-button"
+        onClick={onRotate}
+        disabled={!canRotate}
+      >
+        ↻ Rotacionar
       </button>
     </div>
   );

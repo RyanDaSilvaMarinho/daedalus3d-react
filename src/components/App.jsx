@@ -4,7 +4,6 @@ import Toolbar from './Toolbar';
 import Canvas from './Canvas';
 import ObjectPanel from './ObjectPanel';
 import '../App.css';
-
 import { useNavigate } from "react-router-dom";
 
 const App = () => {
@@ -13,10 +12,11 @@ const App = () => {
   const [modelFile, setModelFile] = useState(null);
   const [objModelFile, setObjModelFile] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedObjectId, setSelectedObjectId] = useState(null);
   const canvasRef = useRef();
 
-  let navigate = useNavigate(); 
-  const routeChange = (destiny) =>{ 
+  let navigate = useNavigate();
+  const routeChange = (destiny) => { 
     let path = destiny; 
     navigate(path);
   }
@@ -48,6 +48,7 @@ const App = () => {
         return [...prev, id];
       }
     });
+    setSelectedObjectId(id);
   };
 
   const handleUnion = () => {
@@ -69,6 +70,12 @@ const App = () => {
     }
   };
 
+  const handleRotate = () => {
+    if (selectedObjectId) {
+      canvasRef.current.rotateObject(selectedObjectId, Math.PI/2);
+    }
+  };
+
   return (
     <div className="app-container">
       <Header onOBJUpload={setObjModelFile} />
@@ -78,6 +85,8 @@ const App = () => {
           showObjectPanel={showObjectPanel}
           onUnion={handleUnion}
           canUnion={selectedIds.length === 2}
+          onRotate={handleRotate}
+          canRotate={selectedObjectId !== null}
         />
         <Canvas 
           ref={canvasRef}
@@ -117,7 +126,7 @@ const App = () => {
           <button className="generate-button">Converter</button>
         </div>
         <button className='exit-box' onClick={() => routeChange('/')}>
-          Sair <img src='Icon-logout.svg'></img>
+          Sair <img src='Icon-logout.svg' alt="Sair"></img>
         </button>
       </div>
     </div>
