@@ -1,6 +1,6 @@
 import React, {useRef} from 'react';
 
-const Toolbar = ({ onAddObject, showObjectPanel, onUnion, canUnion, onRotate, canRotate, onOBJUpload, onSaveProject }) => {
+const Toolbar = ({ onAddObject, showObjectPanel, onUnion, canUnion, onRotate, canRotate, onOBJUpload, onSaveProject, onExportOBJ }) => {
   const fileInputRef = useRef(null);
 
   const handleFileImport = () => {
@@ -60,6 +60,13 @@ const Toolbar = ({ onAddObject, showObjectPanel, onUnion, canUnion, onRotate, ca
         onClick={onSaveProject}
       >
         💾 Salvar
+      </button>
+      {/* Botão de Exportar OBJ */}
+      <button
+        className="tool-button"
+        onClick={onExportOBJ}
+      >
+        📥 Exportar OBJ
       </button>
     </div>
   );

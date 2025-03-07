@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { CSG } from 'three-csg-ts';
+import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter'; 
 
 const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject }, ref) => {
   const canvasRef = useRef(null);
@@ -188,6 +189,18 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
         object.rotation.y += angle;
         rendererRef.current.render(sceneRef.current, cameraRef.current);
       }
+    },
+    // Adicione a função de exportação aqui
+    exportSceneToOBJ: () => {
+      const scene = sceneRef.current;
+      const exporter = new OBJExporter();
+      const result = exporter.parse(scene);
+
+      const blob = new Blob([result], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'scene.obj';
+      link.click();
     }
   }));
 

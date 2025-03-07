@@ -14,15 +14,15 @@ const App = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectedObjectId, setSelectedObjectId] = useState(null);
   const canvasRef = useRef();
-  
+
   let navigate = useNavigate();
   const location = useLocation();
-  
-  const routeChange = (destiny) => { 
-    let path = destiny; 
+
+  const routeChange = (destiny) => {
+    let path = destiny;
     navigate(path);
   }
-    // Carregar projeto salvo (se houver)
+  // Carregar projeto salvo (se houver)
   useEffect(() => {
     if (location.state?.project) {
       const { project } = location.state;
@@ -31,7 +31,7 @@ const App = () => {
       setObjModelFile(project.data.objModelFile || null);
     }
   }, [location.state]);
-  
+
   const handleAddObject = (type, color = '#00ff88') => {
     const newObject = {
       type,
@@ -69,7 +69,7 @@ const App = () => {
   const handleUnion = () => {
     if (selectedIds.length === 2) {
       const unionResult = canvasRef.current.performUnion(selectedIds);
-      
+
       if (unionResult) {
         setObjects(prev => [
           ...prev.filter(obj => !unionResult.originalIds.includes(obj.id)),
@@ -87,7 +87,7 @@ const App = () => {
 
   const handleRotate = () => {
     if (selectedObjectId) {
-      canvasRef.current.rotateObject(selectedObjectId, Math.PI/2);
+      canvasRef.current.rotateObject(selectedObjectId, Math.PI / 2);
     }
   };
 
@@ -106,12 +106,18 @@ const App = () => {
     localStorage.setItem('projects', JSON.stringify(projects));
     alert('Projeto salvo com sucesso!');
   };
-  
+
+  const handleExportOBJ = () => {
+    if (canvasRef.current) {
+      canvasRef.current.exportSceneToOBJ();
+    }
+  };
+
   return (
     <div className="app-container">
       <div className="main-content">
-      <ProjectTabs />
-        <Toolbar 
+        <ProjectTabs />
+        <Toolbar
           onAddObject={setShowObjectPanel}
           showObjectPanel={showObjectPanel}
           onUnion={handleUnion}
@@ -120,9 +126,10 @@ const App = () => {
           canRotate={selectedObjectId !== null}
           onOBJUpload={handleOBJUpload}
           onSaveProject={saveCurrentProject}
-          routeChange={() => navigate('/')}  
+          onExportOBJ={handleExportOBJ}
+          routeChange={() => navigate('/')}
         />
-        <Canvas 
+        <Canvas
           ref={canvasRef}
           objects={objects}
           modelFile={modelFile}
@@ -131,12 +138,12 @@ const App = () => {
           routeChange={() => navigate('/')}
         />
       </div>
-      <ObjectPanel 
+      <ObjectPanel
         show={showObjectPanel}
         onSelectType={handleAddObject}
       />
       <div className="properties-panel">
-        
+
         <div className="properties-card">
           <h3>Texto para 3D</h3>
           <textarea placeholder="Digite seu texto aqui..."></textarea>
