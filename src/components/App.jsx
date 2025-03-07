@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Toolbar from './Toolbar';
+import ProjectTabs from './ProjectTabs';
 import Canvas from './Canvas';
 import ObjectPanel from './ObjectPanel';
 import '../App.css';
@@ -109,6 +110,7 @@ const App = () => {
   return (
     <div className="app-container">
       <div className="main-content">
+      <ProjectTabs />
         <Toolbar 
           onAddObject={setShowObjectPanel}
           showObjectPanel={showObjectPanel}
@@ -134,6 +136,7 @@ const App = () => {
         onSelectType={handleAddObject}
       />
       <div className="properties-panel">
+        
         <div className="properties-card">
           <h3>Texto para 3D</h3>
           <textarea placeholder="Digite seu texto aqui..."></textarea>

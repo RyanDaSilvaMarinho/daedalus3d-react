@@ -234,16 +234,16 @@ body {
 
 /* Toolbar */
 .sidebar {
-  width: 90px;
+  width: 50px;
   background: rgba(11, 31, 31, 0.8);
   backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
-  height: 50%;
+  height: 30%;
   align-items: center;
   padding: 1rem 0;
   gap: 1rem;
-  border-radius: 12px;
+  border-radius: 20px;
   border: 1px solid #0D838333;
   position: absolute; /* Alterado para 'absolute' */
   right: 12vw; /* Ajustando a distância da borda direita */
@@ -251,8 +251,8 @@ body {
 }
 
 .tool-button {
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
   background-color: #5B8181;
   border: none;
   border-radius: 8px;
@@ -509,5 +509,23 @@ textarea {
 .mesh-highlight {
   outline: 2px solid #00ff00;
   outline-offset: 2px;
+}
+.ambiente-modelagem {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background-color: transparent;
+  padding: 0.75rem 1rem;
+  color: white;
+  z-index: 10;
+}
+
+.ambiente-modelagem h6 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin: 0;
+  font-family: 'Open Sans', sans-serif;
+  letter-spacing: 0.5px;
 }
 }
