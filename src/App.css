@@ -177,22 +177,25 @@ body {
 
 /* Toolbar */
 .sidebar {
-  width: 100px;
+  width: 90px;
   background: rgba(11, 31, 31, 0.8);
   backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
-  height: 60%;
+  height: 50%;
   align-items: center;
   padding: 1rem 0;
   gap: 1rem;
   border-radius: 12px;
   border: 1px solid #0D838333;
+  position: absolute; /* Alterado para 'absolute' */
+  right: 12vw; /* Ajustando a distância da borda direita */
+  top: 18vh;
 }
 
 .tool-button {
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 50px;
   background-color: #5B8181;
   border: none;
   border-radius: 8px;
@@ -262,8 +265,8 @@ body {
 /* Object Panel */
 #object-panel {
   position: fixed;
-  top: 80px;
-  left:450px;
+  top: 18vh;
+  right: 16.5vw;
   width: 240px;
   background-color: #030F0F;
   border: 1px solid #0D838333;

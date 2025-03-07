@@ -1,5 +1,4 @@
 import React, { useState, useRef } from 'react';
-import Header from './Header';
 import Toolbar from './Toolbar';
 import Canvas from './Canvas';
 import ObjectPanel from './ObjectPanel';
@@ -39,7 +38,11 @@ const App = () => {
     const file = e.target.files[0];
     file && setModelFile(file);
   };
-
+  
+  // Upload de arquivo OBJ
+  const handleOBJUpload = (file) => {
+    setObjModelFile(file);
+  };
   const handleSelectObject = (id) => {
     setSelectedIds(prev => {
       if (prev.includes(id)) {
@@ -78,7 +81,6 @@ const App = () => {
 
   return (
     <div className="app-container">
-      <Header onOBJUpload={setObjModelFile} />
       <div className="main-content">
         <Toolbar 
           onAddObject={setShowObjectPanel}
@@ -87,6 +89,7 @@ const App = () => {
           canUnion={selectedIds.length === 2}
           onRotate={handleRotate}
           canRotate={selectedObjectId !== null}
+          onOBJUpload={handleOBJUpload}
         />
         <Canvas 
           ref={canvasRef}
