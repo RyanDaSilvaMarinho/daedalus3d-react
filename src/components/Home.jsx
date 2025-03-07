@@ -1,15 +1,36 @@
+import React, { useState, useEffect } from 'react';
 import '../App.css';
-
 import { useNavigate } from "react-router-dom";
 
 const Home = () => {
+  const [projects, setProjects] = useState([]);
+  const navigate = useNavigate();
 
-  let navigate = useNavigate(); 
   const routeChange = (destiny) =>{ 
     let path = destiny; 
     navigate(path);
   }
-
+  useEffect(() => {
+    const loadedProjects = JSON.parse(localStorage.getItem('projects')) || [];
+    
+    // Ordenar projetos pelo nome
+    const sortedProjects = loadedProjects.sort((a, b) => {
+      const numberA = parseInt(a.name.split(' ')[1], 10);
+      const numberB = parseInt(b.name.split(' ')[1], 10);
+      return numberA - numberB;
+    });
+  
+    setProjects(sortedProjects);
+  }, []);
+  // Função para abrir um projeto
+  const openProject = (projectId) => {
+    const projects = JSON.parse(localStorage.getItem('projects')) || [];
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      // Passar os dados do projeto para a página App
+      navigate('/App', { state: { project } });
+    }
+  };
   return (
     <div className="home-container">
         <img className="logo" src="kp-logo-placeholder.png" alt='Logo'/>
@@ -20,7 +41,18 @@ const Home = () => {
               <br/>Novo Projeto
             </div>
           </div>
-          <div className='home-history'></div>
+          <div className='home-history'>
+          <h3>Histórico de Projetos</h3>
+            <ul>
+              {projects.map((project) => (
+                <li key={project.id}>
+                  <span>{project.name}</span>
+                  <span>{project.date}</span>
+                  <button onClick={() => openProject(project.id)}>Abrir</button>
+              </li>
+            ))}
+          </ul>
+        </div>
         </div>
         <div className='home-profile'></div>
         <div className='home-options'></div>

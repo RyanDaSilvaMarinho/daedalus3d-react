@@ -1,9 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Toolbar from './Toolbar';
 import Canvas from './Canvas';
 import ObjectPanel from './ObjectPanel';
 import '../App.css';
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const App = () => {
   const [showObjectPanel, setShowObjectPanel] = useState(false);
@@ -13,13 +13,24 @@ const App = () => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [selectedObjectId, setSelectedObjectId] = useState(null);
   const canvasRef = useRef();
-
+  
   let navigate = useNavigate();
+  const location = useLocation();
+  
   const routeChange = (destiny) => { 
     let path = destiny; 
     navigate(path);
   }
-
+    // Carregar projeto salvo (se houver)
+  useEffect(() => {
+    if (location.state?.project) {
+      const { project } = location.state;
+      setObjects(project.data.objects || []);
+      setModelFile(project.data.modelFile || null);
+      setObjModelFile(project.data.objModelFile || null);
+    }
+  }, [location.state]);
+  
   const handleAddObject = (type, color = '#00ff88') => {
     const newObject = {
       type,
@@ -38,7 +49,7 @@ const App = () => {
     const file = e.target.files[0];
     file && setModelFile(file);
   };
-  
+
   // Upload de arquivo OBJ
   const handleOBJUpload = (file) => {
     setObjModelFile(file);
@@ -79,6 +90,22 @@ const App = () => {
     }
   };
 
+  const saveCurrentProject = () => {
+    const projects = JSON.parse(localStorage.getItem('projects')) || [];
+    const projectNumber = projects.length + 1;
+
+    const project = {
+      id: Date.now(),
+      name: `Projeto ${projectNumber}`,
+      date: new Date().toISOString(),
+      data: { objects, modelFile, objModelFile },
+    };
+
+    projects.push(project);
+    localStorage.setItem('projects', JSON.stringify(projects));
+    alert('Projeto salvo com sucesso!');
+  };
+  
   return (
     <div className="app-container">
       <div className="main-content">
@@ -90,6 +117,8 @@ const App = () => {
           onRotate={handleRotate}
           canRotate={selectedObjectId !== null}
           onOBJUpload={handleOBJUpload}
+          onSaveProject={saveCurrentProject}
+          routeChange={() => navigate('/')}  
         />
         <Canvas 
           ref={canvasRef}
@@ -97,6 +126,7 @@ const App = () => {
           modelFile={modelFile}
           objModelFile={objModelFile}
           onSelectObject={handleSelectObject}
+          routeChange={() => navigate('/')}
         />
       </div>
       <ObjectPanel 

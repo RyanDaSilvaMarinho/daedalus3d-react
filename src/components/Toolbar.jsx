@@ -1,6 +1,6 @@
 import React, {useRef} from 'react';
 
-const Toolbar = ({ onAddObject, showObjectPanel, onUnion, canUnion, onRotate, canRotate, onOBJUpload }) => {
+const Toolbar = ({ onAddObject, showObjectPanel, onUnion, canUnion, onRotate, canRotate, onOBJUpload, onSaveProject }) => {
   const fileInputRef = useRef(null);
 
   const handleFileImport = () => {
@@ -54,6 +54,13 @@ const Toolbar = ({ onAddObject, showObjectPanel, onUnion, canUnion, onRotate, ca
         accept=".obj"
         onChange={handleFileChange}  // Chamamos a função com a verificação do tipo
       />
+      {/* Botão de Salvar */}
+      <button
+        className="tool-button"
+        onClick={onSaveProject}
+      >
+        💾 Salvar
+      </button>
     </div>
   );
 };
