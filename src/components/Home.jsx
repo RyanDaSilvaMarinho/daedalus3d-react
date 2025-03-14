@@ -55,7 +55,9 @@ const Home = () => {
         </div>
         </div>
         <div className='home-profile'></div>
-        <div className='home-options'></div>
+        <div className='home-options'>
+          <button className="home-button">🏠Inicio</button>
+        </div>
     </div>
             
   );

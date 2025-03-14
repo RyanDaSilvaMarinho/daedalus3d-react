@@ -53,8 +53,20 @@ body {
   left: 79.87vw;
   height: 61.11vh;
   width: 14.14vw;
+  align-items: center;
+  padding: 1rem 0;
 }
-
+.home-button {
+  width: 80%;
+  padding: 0.75rem;
+  background-color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  color: rgb(29, 28, 28);
+  cursor: pointer;
+  font-weight: bold;
+  transition: opacity 0.2s;
+}
 .app-container, .home-container {
   margin: 7.6vh 4.4vw;
   height: 84.8vh;
@@ -137,7 +149,6 @@ body {
   padding: 1.98%;
   font-family: 'Open Sans';
 }
-
 .new-project {
   height: 18.70vh;
   width: 9.93vw;
@@ -190,24 +201,6 @@ body {
   opacity: 0.8;
 }
 
-/* Timeline */
-.Timeline {
-  height: 30px;
-  background-color: #5B8181;
-  display: flex;
-  align-items: center;
-  padding: 0 1rem;
-  gap: 1rem;
-  margin: 10px;
-  border-radius: 8px;
-}
-
-.Timeline-mark {
-  width: 1px;
-  height: 10px;
-  background-color: #4a5c6a;
-}
-
 /* Main Content */
 .main-content {
   display: flex;
@@ -246,8 +239,8 @@ body {
   border-radius: 20px;
   border: 1px solid #0D838333;
   position: absolute; /* Alterado para 'absolute' */
-  right: 12vw; /* Ajustando a distância da borda direita */
-  top: 18vh;
+  right: 21vw; /* Ajustando a distância da borda direita */
+  top: 11.4vh;
 }
 
 .tool-button {
@@ -306,7 +299,8 @@ body {
   background-color: #FFFFFF00;
   color: #ffffff;
   font-family: 'Open Sans';
-  align-content: center;
+  align-content: right;
+  padding: 1rem;
 }
 
 .exit-box:hover{
@@ -451,7 +445,7 @@ textarea {
 .generate-button {
   width: 100%;
   padding: 0.75rem;
-  background-color: #0D8383;
+  background-color: #00ff9d;
   border: none;
   border-radius: 6px;
   color: black;

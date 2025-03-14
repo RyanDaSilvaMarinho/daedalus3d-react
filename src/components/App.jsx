@@ -147,16 +147,6 @@ const App = () => {
         <div className="properties-card">
           <h3>Texto para 3D</h3>
           <textarea placeholder="Digite seu texto aqui..."></textarea>
-          <div className="param-controls">
-            <div className="param-item">
-              <label>Guidance Scale</label>
-              <input type="number" defaultValue="15" />
-            </div>
-            <div className="param-item">
-              <label>Passos</label>
-              <input type="number" defaultValue="64" />
-            </div>
-          </div>
           <button className="generate-button">Gerar</button>
         </div>
         <div className="properties-card">
@@ -168,9 +158,13 @@ const App = () => {
           />
           <button className="generate-button">Converter</button>
         </div>
-        <button className='exit-box' onClick={() => routeChange('/')}>
+      </div>
+      <div className='home-profile'></div>
+      <div className='home-options'>
+      <button className='home-button' onClick={() => routeChange('/')}>🏠Inicio</button>
+      <button className='exit-box' onClick={() => routeChange('/')}>
           Sair <img src='Icon-logout.svg' alt="Sair"></img>
-        </button>
+      </button>
       </div>
     </div>
   );
