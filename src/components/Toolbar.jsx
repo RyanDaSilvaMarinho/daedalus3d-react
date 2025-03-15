@@ -1,72 +1,122 @@
-import React, {useRef} from 'react';
+import React, { useRef } from 'react';
 
-const Toolbar = ({ onAddObject, showObjectPanel, onUnion, canUnion, onRotate, canRotate, onOBJUpload, onSaveProject, onExportOBJ }) => {
+const Toolbar = ({ 
+  onAddObject, 
+  showObjectPanel, 
+  onUnion, 
+  onDifference, 
+  onIntersection, 
+  canBooleanOp, 
+  selectedCount,
+  onRotate, 
+  canRotate, 
+  onOBJUpload, 
+  onSaveProject, 
+  onExportOBJ,
+  routeChange
+}) => {
   const fileInputRef = useRef(null);
 
   const handleFileImport = () => {
     if (fileInputRef.current) {
-      fileInputRef.current.click();  // Verifica se a referência não é nula
+      fileInputRef.current.click();
     }
   };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Verifica se o arquivo é do tipo .obj
       if (file.type === "model/obj" || file.name.endsWith(".obj")) {
-        onOBJUpload(file);  // Chama a função de upload do arquivo
+        onOBJUpload(file);
       } else {
         alert("Por favor, selecione um arquivo .obj!");
       }
     }
   };
+
   return (
     <div className="sidebar">
       <button 
         className="tool-button" 
         onClick={() => onAddObject(!showObjectPanel)}
+        title="Adicionar Objeto"
       >
-        ✢
+        +
       </button>
-      <button
-        className="tool-button"
-        onClick={onUnion}
-        disabled={!canUnion}
-      >
-        🔗
-      </button>
+      
+      {/* Operações Booleanas - agora agrupadas visualmente */}
+      <div className="boolean-operations">
+        <button
+          className="tool-button"
+          onClick={onUnion}
+          disabled={!canBooleanOp}
+          title="União"
+          style={canBooleanOp ? {background: 'rgba(0, 255, 136, 0.2)'} : {}}
+        >
+          ∪
+        </button>
+        <button
+          className="tool-button"
+          onClick={onDifference}
+          disabled={!canBooleanOp}
+          title="Diferença"
+          style={canBooleanOp ? {background: 'rgba(255, 136, 0, 0.2)'} : {}}
+        >
+          −
+        </button>
+        <button
+          className="tool-button"
+          onClick={onIntersection}
+          disabled={!canBooleanOp}
+          title="Interseção"
+          style={canBooleanOp ? {background: 'rgba(0, 136, 255, 0.2)'} : {}}
+        >
+          ∩
+        </button>
+        
+        {/* Indicador de seleção */}
+        {selectedCount > 0 && (
+          <div className="selection-indicator">
+            {selectedCount} selecionado{selectedCount > 1 ? 's' : ''}
+          </div>
+        )}
+      </div>
+      
       <button
         className="tool-button"
         onClick={onRotate}
         disabled={!canRotate}
+        title="Rotacionar"
       >
         ↻
       </button>
       <button
         className="tool-button"
-        onClick={handleFileImport} // Aciona o click no input invisível
+        onClick={handleFileImport}
+        title="Importar OBJ"
       >
         ⬇️ 
       </button>
       <input
         type="file"
         ref={fileInputRef}
-        style={{ display: 'none' }}  // Esconde o input de arquivo
+        style={{ display: 'none' }}
         accept=".obj"
-        onChange={handleFileChange}  // Chamamos a função com a verificação do tipo
+        onChange={handleFileChange}
       />
-      {/* Botão de Salvar */}
       <button
         className="tool-button"
         onClick={onSaveProject}
+        title="Salvar Projeto"
       >
-        💾 Salvar
+        💾
       </button>
-      {/* Botão de Exportar OBJ */}
       <button
         className="tool-button"
         onClick={onExportOBJ}
+        title="Exportar OBJ"
       >
-        📥 Exportar OBJ
+        📥
       </button>
     </div>
   );

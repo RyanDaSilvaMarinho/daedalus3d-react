@@ -12,17 +12,11 @@ const App = () => {
   const [modelFile, setModelFile] = useState(null);
   const [objModelFile, setObjModelFile] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [selectedObjectId, setSelectedObjectId] = useState(null);
   const canvasRef = useRef();
 
   let navigate = useNavigate();
   const location = useLocation();
 
-  const routeChange = (destiny) => {
-    let path = destiny;
-    navigate(path);
-  }
-  // Carregar projeto salvo (se houver)
   useEffect(() => {
     if (location.state?.project) {
       const { project } = location.state;
@@ -51,43 +45,46 @@ const App = () => {
     file && setModelFile(file);
   };
 
-  // Upload de arquivo OBJ
   const handleOBJUpload = (file) => {
     setObjModelFile(file);
   };
+
   const handleSelectObject = (id) => {
     setSelectedIds(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(existingId => existingId !== id);
-      } else {
+      if (prev.length < 2) {
         return [...prev, id];
       }
+      return [id];
     });
-    setSelectedObjectId(id);
   };
 
-  const handleUnion = () => {
+  const handleBooleanOperation = (operation) => {
     if (selectedIds.length === 2) {
-      const unionResult = canvasRef.current.performUnion(selectedIds);
-
-      if (unionResult) {
+      let result;
+      switch(operation) {
+        case 'union':
+          result = canvasRef.current.performUnion(selectedIds);
+          break;
+        case 'difference':
+          result = canvasRef.current.performDifference(selectedIds);
+          break;
+        case 'intersection':
+          result = canvasRef.current.performIntersection(selectedIds);
+          break;
+      }
+      
+      if (result) {
         setObjects(prev => [
-          ...prev.filter(obj => !unionResult.originalIds.includes(obj.id)),
+          ...prev.filter(obj => !selectedIds.includes(obj.id)),
           {
-            id: unionResult.newId,
-            type: 'union',
-            color: '#00ff88',
-            position: unionResult.position
+            id: result.newId,
+            type: operation,
+            color: '#ff8800',
+            position: result.position
           }
         ]);
+        setSelectedIds([]);
       }
-      setSelectedIds([]);
-    }
-  };
-
-  const handleRotate = () => {
-    if (selectedObjectId) {
-      canvasRef.current.rotateObject(selectedObjectId, Math.PI / 2);
     }
   };
 
@@ -108,10 +105,29 @@ const App = () => {
   };
 
   const handleExportOBJ = () => {
-    if (canvasRef.current) {
-      canvasRef.current.exportSceneToOBJ();
-    }
+    canvasRef.current?.exportSceneToOBJ();
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.shiftKey) {
+        document.body.classList.add('shift-pressed');
+      }
+    };
+
+    const handleKeyUp = (e) => {
+      if (!e.shiftKey) {
+        document.body.classList.remove('shift-pressed');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   return (
     <div className="app-container">
@@ -120,10 +136,8 @@ const App = () => {
         <Toolbar
           onAddObject={setShowObjectPanel}
           showObjectPanel={showObjectPanel}
-          onUnion={handleUnion}
-          canUnion={selectedIds.length === 2}
-          onRotate={handleRotate}
-          canRotate={selectedObjectId !== null}
+          onBooleanOperation={handleBooleanOperation}
+          canOperate={selectedIds.length === 2}
           onOBJUpload={handleOBJUpload}
           onSaveProject={saveCurrentProject}
           onExportOBJ={handleExportOBJ}
@@ -135,15 +149,16 @@ const App = () => {
           modelFile={modelFile}
           objModelFile={objModelFile}
           onSelectObject={handleSelectObject}
-          routeChange={() => navigate('/')}
+          selectedIds={selectedIds}
         />
       </div>
+      
       <ObjectPanel
         show={showObjectPanel}
         onSelectType={handleAddObject}
       />
-      <div className="properties-panel">
 
+      <div className="properties-panel">
         <div className="properties-card">
           <h3>Texto para 3D</h3>
           <textarea placeholder="Digite seu texto aqui..."></textarea>
@@ -159,12 +174,15 @@ const App = () => {
           <button className="generate-button">Converter</button>
         </div>
       </div>
+
       <div className='home-profile'></div>
       <div className='home-options'>
-      <button className='home-button' onClick={() => routeChange('/')}>🏠Inicio</button>
-      <button className='exit-box' onClick={() => routeChange('/')}>
-          Sair <img src='Icon-logout.svg' alt="Sair"></img>
-      </button>
+        <button className='home-button' onClick={() => navigate('/')}>
+          🏠 Inicio
+        </button>
+        <button className='exit-box' onClick={() => navigate('/')}>
+          Sair <img src='Icon-logout.svg' alt="Sair"/>
+        </button>
       </div>
     </div>
   );

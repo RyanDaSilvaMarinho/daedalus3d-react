@@ -16,8 +16,19 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
   const [selectedObject, setSelectedObject] = useState(null);
   const indicatorsRef = useRef([]);
   const [isRotating, setIsRotating] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartPoint = useRef(new THREE.Vector2());
   const rotateStartPoint = useRef(new THREE.Vector2());
   const rotateAxis = useRef(null);
+  
+  // Raio para destacar objetos selecionados
+  const selectedOutlineRef = useRef([]);
+  
+  // Plano para dragndrop
+  const dragPlaneRef = useRef(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
+  const raycasterRef = useRef(new THREE.Raycaster());
+  const mousePositionRef = useRef(new THREE.Vector2());
+  const intersectionPointRef = useRef(new THREE.Vector3());
 
   // Função para criar indicadores de transformação
   const createIndicators = (object) => {
@@ -89,10 +100,48 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     indicatorsRef.current.push(arrowX, arrowY, arrowZ, xRing, yRing, zRing);
   };
 
+  // Função para destacar objetos selecionados
+  const highlightObject = (object, isSelected) => {
+    if (!object) return;
+
+    // Remover destaque existente se houver
+    selectedOutlineRef.current.forEach(outline => {
+      if (outline.parent) {
+        outline.parent.remove(outline);
+      }
+    });
+    selectedOutlineRef.current = [];
+
+    if (isSelected) {
+      // Criar um contorno para o objeto selecionado
+      const outlineMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00ff00,
+        side: THREE.BackSide,
+        transparent: true,
+        opacity: 0.5
+      });
+
+      if (object.geometry) {
+        const outlineGeometry = object.geometry.clone();
+        const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
+        
+        // Tornar o contorno ligeiramente maior
+        outline.scale.multiplyScalar(1.05);
+        outline.position.copy(object.position);
+        outline.rotation.copy(object.rotation);
+        
+        sceneRef.current.add(outline);
+        selectedOutlineRef.current.push(outline);
+      }
+    }
+  };
+
   // Operações booleanas
   const performBooleanOperation = (operation, selectedIds) => {
     const scene = sceneRef.current;
-    const meshes = objectsRef.current.filter(m => selectedIds.includes(m.userData.id));
+    const meshes = objectsRef.current.filter(m => 
+      selectedIds.includes(m.userData.id)
+    ).sort((a, b) => selectedIds.indexOf(a.userData.id) - selectedIds.indexOf(b.userData.id));  
 
     if (meshes.length !== 2) {
       console.error('Selecione exatamente 2 objetos');
@@ -161,10 +210,19 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
       scene.remove(meshes[1]);
       scene.add(result);
 
+      // Limpar destaques
+      selectedOutlineRef.current.forEach(outline => {
+        if (outline.parent) {
+          outline.parent.remove(outline);
+        }
+      });
+      selectedOutlineRef.current = [];
+
       // Atualizar referências
       objectsRef.current = objectsRef.current
         .filter(m => !selectedIds.includes(m.userData.id))
         .concat(result);
+      
 
       return {
         newId: result.userData.id,
@@ -275,9 +333,142 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     };
   }, []);
 
+  // Implementação de movimentação (drag & drop)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const updateMousePosition = (e) => {
+      if (!canvasRef.current) return;
+      const rect = canvasRef.current.getBoundingClientRect();
+      mousePositionRef.current.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mousePositionRef.current.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    };
+
+    const onMouseDown = (e) => {
+      updateMousePosition(e);
+      
+      // Verificar se está clicando em um anel de rotação
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(mousePositionRef.current, cameraRef.current);
+      
+      const rotationRings = indicatorsRef.current.filter(
+        obj => obj.userData?.isRotationRing
+      );
+      
+      const ringsIntersects = raycaster.intersectObjects(rotationRings);
+      
+      if (ringsIntersects.length > 0) {
+        rotateAxis.current = ringsIntersects[0].object.userData.axis;
+        rotateStartPoint.current.copy(mousePositionRef.current);
+        setIsRotating(true);
+        // Desabilitar controles de câmera durante rotação
+        controlsRef.current.enabled = false;
+        return;
+      }
+      
+      // Verificar se está clicando em um objeto para movimentação
+      const objectIntersects = raycaster.intersectObjects(objectsRef.current);
+      
+      if (objectIntersects.length > 0 && selectedObject) {
+        setIsDragging(true);
+        dragStartPoint.current.copy(mousePositionRef.current);
+        // Desabilitar controles de câmera durante drag
+        controlsRef.current.enabled = false;
+      }
+    };
+
+    const onMouseMove = (e) => {
+      updateMousePosition(e);
+      
+      // Lógica de rotação
+      if (isRotating && selectedObject) {
+        const delta = new THREE.Vector2().subVectors(
+          mousePositionRef.current, 
+          rotateStartPoint.current
+        );
+        const angle = delta.length() * Math.PI;
+
+        switch (rotateAxis.current) {
+          case 'x':
+            selectedObject.rotation.x += angle;
+            break;
+          case 'y':
+            selectedObject.rotation.y += angle;
+            break;
+          case 'z':
+            selectedObject.rotation.z += angle;
+            break;
+        }
+
+        rotateStartPoint.current.copy(mousePositionRef.current);
+        
+        // Atualizar indicadores
+        indicatorsRef.current.forEach(ind => {
+          if (ind.userData?.isRotationRing) {
+            ind.position.copy(selectedObject.position);
+          }
+        });
+
+        // Atualizar destaque visual
+        selectedOutlineRef.current.forEach(outline => {
+          outline.position.copy(selectedObject.position);
+          outline.rotation.copy(selectedObject.rotation);
+        });
+      }
+      
+      // Lógica de movimentação
+      else if (isDragging && selectedObject) {
+        const raycaster = raycasterRef.current;
+        raycaster.setFromCamera(mousePositionRef.current, cameraRef.current);
+        
+        // Usar um plano horizontal para o movimento
+        if (raycaster.ray.intersectPlane(dragPlaneRef.current, intersectionPointRef.current)) {
+          // Mover o objeto para a nova posição
+          selectedObject.position.copy(intersectionPointRef.current);
+          
+          // Manter altura y original (offset)
+          if (selectedObject.userData.originalY !== undefined) {
+            selectedObject.position.y = selectedObject.userData.originalY;
+          }
+          
+          // Atualizar indicadores
+          createIndicators(selectedObject);
+          
+          // Atualizar destaque visual
+          selectedOutlineRef.current.forEach(outline => {
+            outline.position.copy(selectedObject.position);
+          });
+        }
+      }
+    };
+
+    const onMouseUp = () => {
+      if (isRotating || isDragging) {
+        // Reabilitar controles de câmera
+        controlsRef.current.enabled = true;
+      }
+      
+      setIsRotating(false);
+      setIsDragging(false);
+      rotateAxis.current = null;
+    };
+
+    canvas.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mouseup', onMouseUp);
+
+    return () => {
+      canvas.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
+  }, [isRotating, isDragging, selectedObject]);
+
   // Seleção de objetos
   useEffect(() => {
     const handleClick = (event) => {
+      if (isRotating || isDragging) return;
       if (!canvasRef.current) return;
 
       const mouse = new THREE.Vector2();
@@ -289,7 +480,12 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
       const raycaster = new THREE.Raycaster();
       raycaster.setFromCamera(mouse, cameraRef.current);
 
-      const intersects = raycaster.intersectObjects(objectsRef.current, true);
+      // Ignorar cliques nos indicadores
+      const indicatorObjects = indicatorsRef.current;
+      const intersects = raycaster.intersectObjects(
+        objectsRef.current.filter(obj => !indicatorObjects.includes(obj)),
+        true
+      );
 
       if (intersects.length > 0) {
         let mesh = intersects[0].object;
@@ -301,12 +497,28 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
           const currentId = mesh.userData.id;
           onSelectObject(currentId);
           setSelectedObject(mesh);
+          
+          // Guardar a altura Y original para manter durante o movimento
+          if (mesh.userData.originalY === undefined) {
+            mesh.userData.originalY = mesh.position.y;
+          }
+          
           createIndicators(mesh);
+          highlightObject(mesh, true);
         }
       } else {
         setSelectedObject(null);
         indicatorsRef.current.forEach(ind => sceneRef.current.remove(ind));
         indicatorsRef.current = [];
+        
+        // Limpar destaques
+        selectedOutlineRef.current.forEach(outline => {
+          if (outline.parent) {
+            outline.parent.remove(outline);
+          }
+        });
+        selectedOutlineRef.current = [];
+        
         onSelectObject(null);
       }
     };
@@ -316,7 +528,7 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
       canvas.addEventListener('click', handleClick);
       return () => canvas.removeEventListener('click', handleClick);
     }
-  }, [onSelectObject]);
+  }, [onSelectObject, isRotating, isDragging]);
 
   // Gerenciamento de objetos
   useEffect(() => {
@@ -374,83 +586,38 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
       );
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      mesh.userData = { id: obj.id };
+      mesh.userData = { 
+        id: obj.id,
+        originalY: obj.position[1] + yOffset
+      };
 
       scene.add(mesh);
       objectsRef.current.push(mesh);
     });
   }, [objects]);
 
-  // Rotação interativa
+  // Destacar objetos quando selecionados por IDs de fora
   useEffect(() => {
-    const canvas = canvasRef.current;
-    
-    const onMouseDown = (e) => {
-      const mouse = new THREE.Vector2(
-        (e.clientX / window.innerWidth) * 2 - 1,
-        -(e.clientY / window.innerHeight) * 2 + 1
-      );
+    // Esta função será chamada quando o array de selectedIds for atualizado pelo componente pai
+    const updateSelectedObjects = () => {
+      // Limpar todos os destaques anteriores
+      selectedOutlineRef.current.forEach(outline => {
+        if (outline.parent) {
+          outline.parent.remove(outline);
+        }
+      });
+      selectedOutlineRef.current = [];
 
-      const raycaster = new THREE.Raycaster();
-      raycaster.setFromCamera(mouse, cameraRef.current);
-
-      const intersects = raycaster.intersectObjects(
-        indicatorsRef.current.filter(obj => obj.userData?.isRotationRing)
-      );
-
-      if (intersects.length > 0) {
-        rotateAxis.current = intersects[0].object.userData.axis;
-        rotateStartPoint.current.copy(mouse);
-        setIsRotating(true);
-      }
+      // Para cada objeto selecionado, criar um destaque
+      objectsRef.current.forEach(object => {
+        if (object.userData.id === selectedObject?.userData.id) {
+          highlightObject(object, true);
+        }
+      });
     };
 
-    const onMouseMove = (e) => {
-      if (!isRotating || !selectedObject) return;
-
-      const mouse = new THREE.Vector2(
-        (e.clientX / window.innerWidth) * 2 - 1,
-        -(e.clientY / window.innerHeight) * 2 + 1
-      );
-
-      const delta = mouse.sub(rotateStartPoint.current);
-      const angle = delta.length() * Math.PI;
-
-      switch (rotateAxis.current) {
-        case 'x':
-          selectedObject.rotation.x += angle;
-          break;
-        case 'y':
-          selectedObject.rotation.y += angle;
-          break;
-        case 'z':
-          selectedObject.rotation.z += angle;
-          break;
-      }
-
-      rotateStartPoint.current.copy(mouse);
-      rendererRef.current.render(sceneRef.current, cameraRef.current);
-    };
-
-    const onMouseUp = () => {
-      setIsRotating(false);
-      rotateAxis.current = null;
-    };
-
-    if (canvas) {
-      canvas.addEventListener('mousedown', onMouseDown);
-      window.addEventListener('mousemove', onMouseMove);
-      window.addEventListener('mouseup', onMouseUp);
-    }
-
-    return () => {
-      if (canvas) {
-        canvas.removeEventListener('mousedown', onMouseDown);
-      }
-      window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('mouseup', onMouseUp);
-    };
-  }, [isRotating, selectedObject]);
+    updateSelectedObjects();
+  }, [selectedObject]);
 
   // Carregamento de modelos
   useEffect(() => {

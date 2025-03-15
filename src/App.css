@@ -232,7 +232,7 @@ body {
   backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
-  height: 30%;
+  height: 40%;
   align-items: center;
   padding: 1rem 0;
   gap: 1rem;
