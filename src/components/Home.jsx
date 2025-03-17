@@ -11,14 +11,12 @@ const Home = () => {
     navigate(path);
   }
   useEffect(() => {
+    // localStorage.setItem('projects', JSON.stringify([])); //CUIDADO, descomentar essa linha limpa os projetos
+
     const loadedProjects = JSON.parse(localStorage.getItem('projects')) || [];
     
     // Ordenar projetos pelo nome
-    const sortedProjects = loadedProjects.sort((a, b) => {
-      const numberA = parseInt(a.name.split(' ')[1], 10);
-      const numberB = parseInt(b.name.split(' ')[1], 10);
-      return numberA - numberB;
-    });
+    const sortedProjects = loadedProjects.sort();
   
     setProjects(sortedProjects);
   }, []);
@@ -28,7 +26,7 @@ const Home = () => {
     const project = projects.find(p => p.id === projectId);
     if (project) {
       // Passar os dados do projeto para a página App
-      navigate('/App', { state: { project } });
+      navigate('/App', { state: { projectId } });
     }
   };
   return (

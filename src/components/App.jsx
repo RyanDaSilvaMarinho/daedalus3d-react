@@ -13,18 +13,24 @@ const App = () => {
   const [objModelFile, setObjModelFile] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const canvasRef = useRef();
+  const id = useRef(-1);
 
+  const isMounted = useRef(false)
+  
   let navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (location.state?.project) {
-      const { project } = location.state;
+    if (location.state?.projectId) {
+      const projects = JSON.parse(localStorage.getItem('projects')) || [];
+      const project = projects.find(p => p.id === location.state.projectId);
       setObjects(project.data.objects || []);
       setModelFile(project.data.modelFile || null);
       setObjModelFile(project.data.objModelFile || null);
+      id.current = project.id;
     }
   }, [location.state]);
+
 
   const handleAddObject = (type, color = '#00ff88') => {
     const newObject = {
@@ -86,21 +92,45 @@ const App = () => {
         setSelectedIds([]);
       }
     }
+    
   };
 
   const saveCurrentProject = () => {
     const projects = JSON.parse(localStorage.getItem('projects')) || [];
     const projectNumber = projects.length + 1;
-
-    const project = {
-      id: Date.now(),
-      name: `Projeto ${projectNumber}`,
-      date: new Date().toISOString(),
-      data: { objects, modelFile, objModelFile },
-    };
-
-    projects.push(project);
+    let project = null;
+    if (id.current <= 0) {
+      project = {
+        id: Date.now(),
+        name: `Projeto ${projectNumber}`,
+        date: new Date().toISOString(),
+        data: { objects, modelFile, objModelFile },
+      };
+      id.current = project.id;
+      projects.push(project);
+    }else{
+      project = projects.find(p => p.id === id.current);
+      project.date = new Date().toISOString();
+      project.data = { objects, modelFile, objModelFile };
+      projects.map((proj) => proj.id === id.current? project : proj)
+    }
     localStorage.setItem('projects', JSON.stringify(projects));
+  };
+
+  
+  useEffect(() => {
+    if(objects.length === 0){
+      return;
+    }
+    if(!isMounted.current){
+      isMounted.current = true
+      return;
+    }
+     saveCurrentProject();
+   }, [objects, modelFile, objModelFile])
+
+  const manualSave = () => {
+    saveCurrentProject();
     alert('Projeto salvo com sucesso!');
   };
 
@@ -120,9 +150,11 @@ const App = () => {
         document.body.classList.remove('shift-pressed');
       }
     };
+    
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
@@ -139,7 +171,7 @@ const App = () => {
           onBooleanOperation={handleBooleanOperation}
           canOperate={selectedIds.length === 2}
           onOBJUpload={handleOBJUpload}
-          onSaveProject={saveCurrentProject}
+          onSaveProject={manualSave}
           onExportOBJ={handleExportOBJ}
           routeChange={() => navigate('/')}
         />
@@ -177,10 +209,10 @@ const App = () => {
 
       <div className='home-profile'></div>
       <div className='home-options'>
-        <button className='home-button' onClick={() => navigate('/')}>
+        <button className='home-button' onClick={() => {saveCurrentProject(); navigate('/')}}>
           🏠 Inicio
         </button>
-        <button className='exit-box' onClick={() => navigate('/')}>
+        <button className='exit-box' onClick={() => {saveCurrentProject(); navigate('/')}}>
           Sair <img src='Icon-logout.svg' alt="Sair"/>
         </button>
       </div>
