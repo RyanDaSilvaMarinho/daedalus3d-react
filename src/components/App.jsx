@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Toolbar from './Toolbar';
 import ProjectTabs from './ProjectTabs';
 import Canvas from './Canvas';
@@ -12,10 +12,10 @@ const App = () => {
   const [modelFile, setModelFile] = useState(null);
   const [objModelFile, setObjModelFile] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [rotateMode, setRotateMode] = useState(false);
   const canvasRef = useRef();
   const id = useRef(-1);
-
-  const isMounted = useRef(false)
+  const isMounted = useRef(false);
   
   let navigate = useNavigate();
   const location = useLocation();
@@ -30,7 +30,6 @@ const App = () => {
       id.current = project.id;
     }
   }, [location.state]);
-
 
   const handleAddObject = (type, color = '#00ff88') => {
     const newObject = {
@@ -77,6 +76,9 @@ const App = () => {
         case 'intersection':
           result = canvasRef.current.performIntersection(selectedIds);
           break;
+        default:
+          console.error('Operação desconhecida');
+          return;
       }
       
       if (result) {
@@ -92,42 +94,40 @@ const App = () => {
         setSelectedIds([]);
       }
     }
-    
   };
 
-  const saveCurrentProject = () => {
+  const saveCurrentProject = useCallback(() => {
     const projects = JSON.parse(localStorage.getItem('projects')) || [];
-    const projectNumber = projects.length + 1;
     let project = null;
+    
     if (id.current <= 0) {
+      const projectNumber = projects.length + 1;
       project = {
         id: Date.now(),
-        name: `Projeto ${projectNumber}`,
+        name: 'Projeto ${projectNumber}',
         date: new Date().toISOString(),
         data: { objects, modelFile, objModelFile },
       };
       id.current = project.id;
       projects.push(project);
-    }else{
+    } else {
       project = projects.find(p => p.id === id.current);
       project.date = new Date().toISOString();
       project.data = { objects, modelFile, objModelFile };
-      projects.map((proj) => proj.id === id.current? project : proj)
+      const index = projects.findIndex(p => p.id === id.current);
+      projects[index] = project;
     }
     localStorage.setItem('projects', JSON.stringify(projects));
-  };
+  }, [objects, modelFile, objModelFile]);
 
-  
   useEffect(() => {
-    if(objects.length === 0){
+    if(objects.length === 0) return;
+    if(!isMounted.current) {
+      isMounted.current = true;
       return;
     }
-    if(!isMounted.current){
-      isMounted.current = true
-      return;
-    }
-     saveCurrentProject();
-   }, [objects, modelFile, objModelFile])
+    saveCurrentProject();
+  }, [objects, modelFile, objModelFile, saveCurrentProject]);
 
   const manualSave = () => {
     saveCurrentProject();
@@ -151,7 +151,6 @@ const App = () => {
       }
     };
     
-
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     
@@ -174,6 +173,9 @@ const App = () => {
           onSaveProject={manualSave}
           onExportOBJ={handleExportOBJ}
           routeChange={() => navigate('/')}
+          onRotate={() => setRotateMode(prev => !prev)}
+          rotateMode={rotateMode}
+          selectedCount={selectedIds.length}
         />
         <Canvas
           ref={canvasRef}
@@ -181,7 +183,7 @@ const App = () => {
           modelFile={modelFile}
           objModelFile={objModelFile}
           onSelectObject={handleSelectObject}
-          selectedIds={selectedIds}
+          rotateMode={rotateMode}
         />
       </div>
       
@@ -193,7 +195,7 @@ const App = () => {
       <div className="properties-panel">
         <div className="properties-card">
           <h3>Texto para 3D</h3>
-          <textarea placeholder="Digite seu texto aqui..."></textarea>
+          <textarea placeholder="Digite seu texto aqui!"></textarea>
           <button className="generate-button">Gerar</button>
         </div>
         <div className="properties-card">

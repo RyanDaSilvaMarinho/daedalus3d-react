@@ -1,12 +1,12 @@
-import React, { forwardRef, useEffect, useRef, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useEffect, useRef, useImperativeHandle, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { CSG } from 'three-csg-ts';
-import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter'; 
+import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter';
 
-const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject }, ref) => {
+const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, rotateMode }, ref) => {
   const canvasRef = useRef(null);
   const sceneRef = useRef(new THREE.Scene());
   const cameraRef = useRef();
@@ -20,25 +20,20 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
   const dragStartPoint = useRef(new THREE.Vector2());
   const rotateStartPoint = useRef(new THREE.Vector2());
   const rotateAxis = useRef(null);
-  
-  // Raio para destacar objetos selecionados
   const selectedOutlineRef = useRef([]);
-  
-  // Plano para dragndrop
   const dragPlaneRef = useRef(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
   const raycasterRef = useRef(new THREE.Raycaster());
   const mousePositionRef = useRef(new THREE.Vector2());
   const intersectionPointRef = useRef(new THREE.Vector3());
 
-  // Função para criar indicadores de transformação
-  const createIndicators = (object) => {
+  const createIndicators = useCallback((object) => {
     const scene = sceneRef.current;
     
-    // Remover indicadores antigos
     indicatorsRef.current.forEach(ind => scene.remove(ind));
     indicatorsRef.current = [];
 
-    // Setas de eixo
+    if (!rotateMode || !object) return;
+
     const arrowSize = 1.5;
     const arrowX = new THREE.ArrowHelper(
       new THREE.Vector3(1, 0, 0),
@@ -58,8 +53,7 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
       arrowSize,
       0x0000ff
     );
-    
-    // Anéis de rotação
+
     const ringGeometry = new THREE.RingGeometry(1.5, 2, 32);
     const xRingMaterial = new THREE.MeshBasicMaterial({ 
       color: 0xff0000, 
@@ -78,7 +72,6 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     const yRing = new THREE.Mesh(ringGeometry, yRingMaterial);
     const zRing = new THREE.Mesh(ringGeometry, zRingMaterial);
 
-    // Posicionar e rotacionar anéis
     xRing.rotation.z = Math.PI/2;
     yRing.rotation.x = Math.PI/2;
     zRing.rotation.y = Math.PI/2;
@@ -87,7 +80,6 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     yRing.position.copy(object.position);
     zRing.position.copy(object.position);
 
-    // Configurar dados para detecção
     [xRing, yRing, zRing].forEach(ring => {
       ring.userData.isRotationRing = true;
     });
@@ -95,16 +87,13 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     yRing.userData.axis = 'y';
     zRing.userData.axis = 'z';
 
-    // Adicionar à cena
     scene.add(arrowX, arrowY, arrowZ, xRing, yRing, zRing);
     indicatorsRef.current.push(arrowX, arrowY, arrowZ, xRing, yRing, zRing);
-  };
+  }, [rotateMode]);
 
-  // Função para destacar objetos selecionados
-  const highlightObject = (object, isSelected) => {
+  const highlightObject = useCallback((object, isSelected) => {
     if (!object) return;
 
-    // Remover destaque existente se houver
     selectedOutlineRef.current.forEach(outline => {
       if (outline.parent) {
         outline.parent.remove(outline);
@@ -113,7 +102,6 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     selectedOutlineRef.current = [];
 
     if (isSelected) {
-      // Criar um contorno para o objeto selecionado
       const outlineMaterial = new THREE.MeshBasicMaterial({
         color: 0x00ff00,
         side: THREE.BackSide,
@@ -124,24 +112,20 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
       if (object.geometry) {
         const outlineGeometry = object.geometry.clone();
         const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
-        
-        // Tornar o contorno ligeiramente maior
         outline.scale.multiplyScalar(1.05);
         outline.position.copy(object.position);
         outline.rotation.copy(object.rotation);
-        
         sceneRef.current.add(outline);
         selectedOutlineRef.current.push(outline);
       }
     }
-  };
+  }, []);
 
-  // Operações booleanas
-  const performBooleanOperation = (operation, selectedIds) => {
+  const performBooleanOperation = useCallback((operation, selectedIds) => {
     const scene = sceneRef.current;
-    const meshes = objectsRef.current.filter(m => 
-      selectedIds.includes(m.userData.id)
-    ).sort((a, b) => selectedIds.indexOf(a.userData.id) - selectedIds.indexOf(b.userData.id));  
+    const meshes = objectsRef.current
+      .filter(m => selectedIds.includes(m.userData.id))
+      .sort((a, b) => selectedIds.indexOf(a.userData.id) - selectedIds.indexOf(b.userData.id));
 
     if (meshes.length !== 2) {
       console.error('Selecione exatamente 2 objetos');
@@ -149,7 +133,6 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     }
 
     try {
-      // Clonar meshes com transformações
       const [meshA, meshB] = meshes.map(mesh => {
         const clone = mesh.clone();
         clone.position.copy(mesh.position);
@@ -160,7 +143,6 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
         return clone;
       });
 
-      // Converter para CSG
       const csgA = CSG.fromMesh(meshA);
       const csgB = CSG.fromMesh(meshB);
       let csgResult;
@@ -179,7 +161,6 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
           throw new Error('Operação desconhecida');
       }
 
-      // Criar novo mesh
       const result = CSG.toMesh(csgResult, new THREE.Matrix4());
       result.material = new THREE.MeshStandardMaterial({
         color: 0xFF00FF,
@@ -188,11 +169,9 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
         side: THREE.DoubleSide
       });
 
-      // Otimizar geometria
       result.geometry.computeVertexNormals();
       result.geometry.computeBoundingSphere();
 
-      // Posicionar no centro dos objetos originais
       const midPosition = new THREE.Vector3().addVectors(
         meshes[0].position,
         meshes[1].position
@@ -201,16 +180,13 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
       result.position.copy(midPosition);
       result.userData = { id: Date.now() };
       
-      // Atualizar matrizes
       result.updateMatrix();
       result.updateMatrixWorld(true);
 
-      // Atualizar cena
       scene.remove(meshes[0]);
       scene.remove(meshes[1]);
       scene.add(result);
 
-      // Limpar destaques
       selectedOutlineRef.current.forEach(outline => {
         if (outline.parent) {
           outline.parent.remove(outline);
@@ -218,12 +194,10 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
       });
       selectedOutlineRef.current = [];
 
-      // Atualizar referências
       objectsRef.current = objectsRef.current
         .filter(m => !selectedIds.includes(m.userData.id))
         .concat(result);
       
-
       return {
         newId: result.userData.id,
         originalIds: selectedIds,
@@ -234,9 +208,8 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
       console.error('Falha na operação booleana:', error);
       return null;
     }
-  };
+  }, []);
 
-  // Expor métodos para o componente pai
   useImperativeHandle(ref, () => ({
     performUnion: (ids) => performBooleanOperation('union', ids),
     performDifference: (ids) => performBooleanOperation('difference', ids),
@@ -248,7 +221,6 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
         rendererRef.current.render(sceneRef.current, cameraRef.current);
       }
     },
-    // Adicione a função de exportação aqui
     exportSceneToOBJ: () => {
       const scene = sceneRef.current;
       const exporter = new OBJExporter();
@@ -262,7 +234,6 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     }
   }));
 
-  // Configuração inicial da cena
   useEffect(() => {
     const scene = sceneRef.current;
     const camera = new THREE.PerspectiveCamera(
@@ -298,7 +269,6 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     renderer.shadowMap.enabled = true;
     rendererRef.current = renderer;
 
-    // Iluminação
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight.position.set(5, 10, 5);
@@ -306,18 +276,15 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     directionalLight.shadow.mapSize.set(1024, 1024);
     scene.add(ambientLight, directionalLight);
 
-    // Grade
     const gridHelper = new THREE.GridHelper(30, 30, 0x303030, 0x404040);
     gridHelper.position.y = 0;
     scene.add(gridHelper);
 
-    // Controles da câmera
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
 
-    // Animação
     const animate = () => {
       requestAnimationFrame(animate);
       controls.update();
@@ -333,7 +300,6 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     };
   }, []);
 
-  // Implementação de movimentação (drag & drop)
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -346,9 +312,10 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     };
 
     const onMouseDown = (e) => {
+      if (!rotateMode) return;
+
       updateMousePosition(e);
       
-      // Verificar se está clicando em um anel de rotação
       const raycaster = new THREE.Raycaster();
       raycaster.setFromCamera(mousePositionRef.current, cameraRef.current);
       
@@ -362,26 +329,24 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
         rotateAxis.current = ringsIntersects[0].object.userData.axis;
         rotateStartPoint.current.copy(mousePositionRef.current);
         setIsRotating(true);
-        // Desabilitar controles de câmera durante rotação
         controlsRef.current.enabled = false;
         return;
       }
       
-      // Verificar se está clicando em um objeto para movimentação
       const objectIntersects = raycaster.intersectObjects(objectsRef.current);
       
       if (objectIntersects.length > 0 && selectedObject) {
         setIsDragging(true);
         dragStartPoint.current.copy(mousePositionRef.current);
-        // Desabilitar controles de câmera durante drag
         controlsRef.current.enabled = false;
       }
     };
 
     const onMouseMove = (e) => {
+      if (!rotateMode) return;
+
       updateMousePosition(e);
       
-      // Lógica de rotação
       if (isRotating && selectedObject) {
         const delta = new THREE.Vector2().subVectors(
           mousePositionRef.current, 
@@ -399,43 +364,36 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
           case 'z':
             selectedObject.rotation.z += angle;
             break;
+          default:
+            break;
         }
 
         rotateStartPoint.current.copy(mousePositionRef.current);
         
-        // Atualizar indicadores
         indicatorsRef.current.forEach(ind => {
           if (ind.userData?.isRotationRing) {
             ind.position.copy(selectedObject.position);
           }
         });
 
-        // Atualizar destaque visual
         selectedOutlineRef.current.forEach(outline => {
           outline.position.copy(selectedObject.position);
           outline.rotation.copy(selectedObject.rotation);
         });
       }
-      
-      // Lógica de movimentação
       else if (isDragging && selectedObject) {
         const raycaster = raycasterRef.current;
         raycaster.setFromCamera(mousePositionRef.current, cameraRef.current);
         
-        // Usar um plano horizontal para o movimento
         if (raycaster.ray.intersectPlane(dragPlaneRef.current, intersectionPointRef.current)) {
-          // Mover o objeto para a nova posição
           selectedObject.position.copy(intersectionPointRef.current);
           
-          // Manter altura y original (offset)
           if (selectedObject.userData.originalY !== undefined) {
             selectedObject.position.y = selectedObject.userData.originalY;
           }
           
-          // Atualizar indicadores
           createIndicators(selectedObject);
           
-          // Atualizar destaque visual
           selectedOutlineRef.current.forEach(outline => {
             outline.position.copy(selectedObject.position);
           });
@@ -445,7 +403,6 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
 
     const onMouseUp = () => {
       if (isRotating || isDragging) {
-        // Reabilitar controles de câmera
         controlsRef.current.enabled = true;
       }
       
@@ -463,9 +420,8 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-  }, [isRotating, isDragging, selectedObject]);
+  }, [isRotating, isDragging, selectedObject, rotateMode, createIndicators]);
 
-  // Seleção de objetos
   useEffect(() => {
     const handleClick = (event) => {
       if (isRotating || isDragging) return;
@@ -480,7 +436,6 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
       const raycaster = new THREE.Raycaster();
       raycaster.setFromCamera(mouse, cameraRef.current);
 
-      // Ignorar cliques nos indicadores
       const indicatorObjects = indicatorsRef.current;
       const intersects = raycaster.intersectObjects(
         objectsRef.current.filter(obj => !indicatorObjects.includes(obj)),
@@ -498,20 +453,20 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
           onSelectObject(currentId);
           setSelectedObject(mesh);
           
-          // Guardar a altura Y original para manter durante o movimento
           if (mesh.userData.originalY === undefined) {
             mesh.userData.originalY = mesh.position.y;
           }
           
-          createIndicators(mesh);
+          if (rotateMode) createIndicators(mesh);
           highlightObject(mesh, true);
         }
       } else {
         setSelectedObject(null);
-        indicatorsRef.current.forEach(ind => sceneRef.current.remove(ind));
-        indicatorsRef.current = [];
+        if (rotateMode) {
+          indicatorsRef.current.forEach(ind => sceneRef.current.remove(ind));
+          indicatorsRef.current = [];
+        }
         
-        // Limpar destaques
         selectedOutlineRef.current.forEach(outline => {
           if (outline.parent) {
             outline.parent.remove(outline);
@@ -528,25 +483,21 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
       canvas.addEventListener('click', handleClick);
       return () => canvas.removeEventListener('click', handleClick);
     }
-  }, [onSelectObject, isRotating, isDragging]);
+  }, [onSelectObject, isRotating, isDragging, rotateMode, createIndicators, highlightObject]);
 
-  // Gerenciamento de objetos
   useEffect(() => {
     const scene = sceneRef.current;
     const currentIds = objects.map(obj => obj.id);
     
-    // Remover objetos deletados
     const objectsToRemove = objectsRef.current.filter(
       obj => !currentIds.includes(obj.userData.id)
     );
     objectsToRemove.forEach(obj => scene.remove(obj));
     
-    // Atualizar lista de objetos
     objectsRef.current = objectsRef.current.filter(
       obj => currentIds.includes(obj.userData.id)
     );
 
-    // Adicionar novos objetos
     objects.forEach(obj => {
       if (objectsRef.current.some(mesh => mesh.userData.id === obj.id)) return;
 
@@ -596,11 +547,8 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     });
   }, [objects]);
 
-  // Destacar objetos quando selecionados por IDs de fora
   useEffect(() => {
-    // Esta função será chamada quando o array de selectedIds for atualizado pelo componente pai
     const updateSelectedObjects = () => {
-      // Limpar todos os destaques anteriores
       selectedOutlineRef.current.forEach(outline => {
         if (outline.parent) {
           outline.parent.remove(outline);
@@ -608,7 +556,6 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
       });
       selectedOutlineRef.current = [];
 
-      // Para cada objeto selecionado, criar um destaque
       objectsRef.current.forEach(object => {
         if (object.userData.id === selectedObject?.userData.id) {
           highlightObject(object, true);
@@ -617,9 +564,8 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     };
 
     updateSelectedObjects();
-  }, [selectedObject]);
+  }, [selectedObject, highlightObject]);
 
-  // Carregamento de modelos
   useEffect(() => {
     if (!modelFile) return;
 
@@ -649,7 +595,6 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
     reader.readAsArrayBuffer(modelFile);
   }, [modelFile]);
 
-  // Carregamento de modelos OBJ
   useEffect(() => {
     if (!objModelFile) return;
 
@@ -679,6 +624,14 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject },
 
     reader.readAsText(objModelFile);
   }, [objModelFile]);
+
+  useEffect(() => {
+    if (!rotateMode) {
+      const scene = sceneRef.current;
+      indicatorsRef.current.forEach(ind => scene.remove(ind));
+      indicatorsRef.current = [];
+    }
+  }, [rotateMode]);
 
   return <canvas ref={canvasRef} className="three-canvas" />;
 });

@@ -3,17 +3,15 @@ import React, { useRef } from 'react';
 const Toolbar = ({ 
   onAddObject, 
   showObjectPanel, 
-  onUnion, 
-  onDifference, 
-  onIntersection, 
-  canBooleanOp, 
+  onBooleanOperation, 
+  canOperate, 
   selectedCount,
   onRotate, 
-  canRotate, 
   onOBJUpload, 
   onSaveProject, 
   onExportOBJ,
-  routeChange
+  routeChange,
+  rotateMode
 }) => {
   const fileInputRef = useRef(null);
 
@@ -44,37 +42,35 @@ const Toolbar = ({
         +
       </button>
       
-      {/* Operações Booleanas - agora agrupadas visualmente */}
       <div className="boolean-operations">
         <button
           className="tool-button"
-          onClick={onUnion}
-          disabled={!canBooleanOp}
+          onClick={() => onBooleanOperation('union')}
+          disabled={!canOperate}
           title="União"
-          style={canBooleanOp ? {background: 'rgba(0, 255, 136, 0.2)'} : {}}
+          style={canOperate ? {background: 'rgba(0, 255, 136, 0.2)'} : {}}
         >
           ∪
         </button>
         <button
           className="tool-button"
-          onClick={onDifference}
-          disabled={!canBooleanOp}
+          onClick={() => onBooleanOperation('difference')}
+          disabled={!canOperate}
           title="Diferença"
-          style={canBooleanOp ? {background: 'rgba(255, 136, 0, 0.2)'} : {}}
+          style={canOperate ? {background: 'rgba(255, 136, 0, 0.2)'} : {}}
         >
           −
         </button>
         <button
           className="tool-button"
-          onClick={onIntersection}
-          disabled={!canBooleanOp}
+          onClick={() => onBooleanOperation('intersection')}
+          disabled={!canOperate}
           title="Interseção"
-          style={canBooleanOp ? {background: 'rgba(0, 136, 255, 0.2)'} : {}}
+          style={canOperate ? {background: 'rgba(0, 136, 255, 0.2)'} : {}}
         >
           ∩
         </button>
         
-        {/* Indicador de seleção */}
         {selectedCount > 0 && (
           <div className="selection-indicator">
             {selectedCount} selecionado{selectedCount > 1 ? 's' : ''}
@@ -85,8 +81,12 @@ const Toolbar = ({
       <button
         className="tool-button"
         onClick={onRotate}
-        disabled={!canRotate}
         title="Rotacionar"
+        style={rotateMode ? { 
+          backgroundColor: '#00ff88', 
+          color: '#000',
+          transform: 'scale(1.1)' 
+        } : {}}
       >
         ↻
       </button>
@@ -117,6 +117,13 @@ const Toolbar = ({
         title="Exportar OBJ"
       >
         📥
+      </button>
+      <button
+        className="tool-button"
+        onClick={routeChange}
+        title="Voltar ao Início"
+      >
+        🏠
       </button>
     </div>
   );
