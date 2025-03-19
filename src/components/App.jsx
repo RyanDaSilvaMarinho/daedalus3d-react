@@ -104,7 +104,7 @@ const App = () => {
       const projectNumber = projects.length + 1;
       project = {
         id: Date.now(),
-        name: 'Projeto ${projectNumber}',
+        name:`Projeto ${projectNumber}`,
         date: new Date().toISOString(),
         data: { objects, modelFile, objModelFile },
       };

@@ -96,7 +96,7 @@ body {
   margin-bottom: 15px;
 }
 
-/* Estilo para a lista de projetos */
+
 .home-history ul {
   list-style-type: none;
   padding: 0;
@@ -124,7 +124,7 @@ body {
   color: #ffffff;
 }
 
-/* Estilo para o botão "Abrir" */
+
 .home-history li button {
   background-color: #0D8383;
   border: none;
@@ -156,7 +156,7 @@ body {
   background: #5B8181 url("../public/new-button.svg") no-repeat center;
 }
 
-/* Header */
+
 .header {
   padding: 1rem;
   display: flex;
@@ -201,7 +201,7 @@ body {
   opacity: 0.8;
 }
 
-/* Main Content */
+
 .main-content {
   display: flex;
   flex: 1;
@@ -210,7 +210,7 @@ body {
   height: 10vh;
 }
 
-/* Canvas */
+
 .canvas-container {
   flex: 1;
   position: relative;
@@ -225,7 +225,7 @@ body {
   background-color:#0D838333;
 }
 
-/* Toolbar */
+
 .sidebar {
   width: 50px;
   background: rgba(11, 31, 31, 0.8);
@@ -238,8 +238,8 @@ body {
   gap: 1rem;
   border-radius: 20px;
   border: 1px solid #0D838333;
-  position: absolute; /* Alterado para 'absolute' */
-  right: 21vw; /* Ajustando a distância da borda direita */
+  position: absolute;
+  right: 21vw;
   top: 11.4vh;
 }
 
@@ -261,7 +261,7 @@ body {
   background-color: #0D8383;
 }
 
-/* Properties Panel */
+
 .properties-panel {
   width: 300px;
   background: rgba(11, 31, 31, 0.8);
@@ -311,9 +311,9 @@ body {
   background-color: #00000033;
 }
 
-/* ========== [FIM DA SIDEBAR DIREITA] ========== */
 
-/* Object Panel */
+
+
 #object-panel {
   position: fixed;
   top: 18vh;
@@ -371,7 +371,7 @@ body {
   transform: translateY(-1px);
 }
 
-/* Project Tabs */
+
 .projects-bar {
   position: absolute;
   bottom: 1rem;
@@ -397,7 +397,7 @@ body {
   background-color: #0D8383;
 }
 
-/* Inputs e Textarea */
+
 textarea {
   width: 100%;
   min-height: 80px;
@@ -456,6 +456,129 @@ textarea {
 
 .generate-button:hover {
   opacity: 0.9;
+}
+
+
+
+.login-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100vh;
+  background-image: url('/public/background.png');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.login-box {
+  width: 400px;
+  height: 80vh;
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 10px;
+  padding: 20px;
+  margin-right: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.login-box h2 {
+  margin-bottom: 20px;
+  font-size: 2rem;
+  color: #0963ED;
+}
+
+.login-box form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
+}
+
+.login-box .form-group {
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.login-box label {
+  margin-bottom: 5px;
+  display: block;
+  font-size: 0.9rem;
+  color: #ffffff;
+}
+
+.login-box input {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #0D838333;
+  background-color: rgba(13, 131, 131, 0.2);
+  color: gray;
+  background-color: #ffffff;
+  width: 100%;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.login-box input:focus {
+  outline: none;
+  border-color: #0963ED;
+}
+
+.login-box .error-message {
+  color: #ff5555;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+}
+
+.login-box .success-message {
+  color: #0963ED;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+}
+
+.login-box .register-button {
+  padding: 10px;
+  background-color: #0963ED;
+  border: none;
+  border-radius: 6px;
+  color: black;
+  cursor: pointer;
+  font-weight: bold;
+  width: 100%;
+  transition: background-color 0.2s, transform 0.2s;
+  margin-top: 10px;
+}
+
+.login-box .register-button:hover {
+  background-color: #0963ED;
+  transform: scale(1.02);
+}
+
+.login-box .register-button:active {
+  background-color: #0963ED;
+  transform: scale(0.98);
+}
+
+.login-box .login-link {
+  margin-top: 15px;
+  font-size: 0.9rem;
+  color: #ffffff;
+}
+
+.login-box .login-link a {
+  color: #0963ED;
+  text-decoration: none;
+  font-weight: bold;
+  transition: opacity 0.2s;
+}
+
+.login-box .login-link a:hover {
+  opacity: 0.8;
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {
