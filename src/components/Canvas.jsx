@@ -34,22 +34,26 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
 
     if (!rotateMode || !object) return;
 
+    const box = new THREE.Box3().setFromObject(object);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+
     const arrowSize = 1.5;
     const arrowX = new THREE.ArrowHelper(
       new THREE.Vector3(1, 0, 0),
-      object.position,
+      center,
       arrowSize,
       0xff0000
     );
     const arrowY = new THREE.ArrowHelper(
       new THREE.Vector3(0, 1, 0),
-      object.position,
+      center,
       arrowSize,
       0x00ff00
     );
     const arrowZ = new THREE.ArrowHelper(
       new THREE.Vector3(0, 0, 1),
-      object.position,
+      center,
       arrowSize,
       0x0000ff
     );
@@ -76,13 +80,11 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
     yRing.rotation.x = Math.PI/2;
     zRing.rotation.y = Math.PI/2;
 
-    xRing.position.copy(object.position);
-    yRing.position.copy(object.position);
-    zRing.position.copy(object.position);
-
     [xRing, yRing, zRing].forEach(ring => {
+      ring.position.copy(center);
       ring.userData.isRotationRing = true;
     });
+
     xRing.userData.axis = 'x';
     yRing.userData.axis = 'y';
     zRing.userData.axis = 'z';
@@ -113,7 +115,12 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
         const outlineGeometry = object.geometry.clone();
         const outline = new THREE.Mesh(outlineGeometry, outlineMaterial);
         outline.scale.multiplyScalar(1.05);
-        outline.position.copy(object.position);
+
+        const box = new THREE.Box3().setFromObject(object);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        outline.position.copy(center);
+        
         outline.rotation.copy(object.rotation);
         sceneRef.current.add(outline);
         selectedOutlineRef.current.push(outline);
@@ -132,14 +139,24 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
       return null;
     }
 
+    const box1 = new THREE.Box3().setFromObject(meshes[0]);
+    const box2 = new THREE.Box3().setFromObject(meshes[1]);
+    
+    if (!box1.intersectsBox(box2)) {
+      console.error('Objetos não estão colidindo');
+      return null;
+    }
+
     try {
+      meshes.forEach(mesh => mesh.updateMatrixWorld(true));
+
       const [meshA, meshB] = meshes.map(mesh => {
         const clone = mesh.clone();
-        clone.position.copy(mesh.position);
-        clone.rotation.copy(mesh.rotation);
-        clone.scale.copy(mesh.scale);
+        clone.geometry = clone.geometry.clone().applyMatrix4(clone.matrixWorld);
+        clone.position.set(0, 0, 0);
+        clone.rotation.set(0, 0, 0);
+        clone.scale.set(1, 1, 1);
         clone.updateMatrix();
-        clone.updateMatrixWorld(true);
         return clone;
       });
 
@@ -148,17 +165,10 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
       let csgResult;
 
       switch (operation) {
-        case 'union':
-          csgResult = csgA.union(csgB);
-          break;
-        case 'difference':
-          csgResult = csgA.subtract(csgB);
-          break;
-        case 'intersection':
-          csgResult = csgA.intersect(csgB);
-          break;
-        default:
-          throw new Error('Operação desconhecida');
+        case 'union': csgResult = csgA.union(csgB); break;
+        case 'difference': csgResult = csgA.subtract(csgB); break;
+        case 'intersection': csgResult = csgA.intersect(csgB); break;
+        default: throw new Error('Operação desconhecida');
       }
 
       const result = CSG.toMesh(csgResult, new THREE.Matrix4());
@@ -169,29 +179,34 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
         side: THREE.DoubleSide
       });
 
-      result.geometry.computeVertexNormals();
-      result.geometry.computeBoundingSphere();
+      // Centralizar geometria
+      result.geometry.computeBoundingBox();
+      const geomCenter = new THREE.Vector3();
+      result.geometry.boundingBox.getCenter(geomCenter);
+      result.geometry.translate(-geomCenter.x, -geomCenter.y, -geomCenter.z);
 
-      const midPosition = new THREE.Vector3().addVectors(
-        meshes[0].position,
-        meshes[1].position
-      ).multiplyScalar(0.5);
-      
-      result.position.copy(midPosition);
+      // Calcular nova posição com base no grid
+      result.geometry.computeBoundingBox();
+      const boundingBox = result.geometry.boundingBox;
+      const newPosition = new THREE.Vector3(
+        (meshes[0].position.x + meshes[1].position.x) / 2,
+        0, // Forçar posição Y para o nível do grid
+        (meshes[0].position.z + meshes[1].position.z) / 2
+      );
+
+      // Ajuste vertical preciso
+      const yOffset = -boundingBox.min.y;
+      newPosition.y += yOffset;
+
+      result.position.copy(newPosition);
       result.userData = { id: Date.now() };
-      
-      result.updateMatrix();
-      result.updateMatrixWorld(true);
 
       scene.remove(meshes[0]);
       scene.remove(meshes[1]);
       scene.add(result);
 
-      selectedOutlineRef.current.forEach(outline => {
-        if (outline.parent) {
-          outline.parent.remove(outline);
-        }
-      });
+      // Atualizar referências
+      selectedOutlineRef.current.forEach(outline => outline.parent?.remove(outline));
       selectedOutlineRef.current = [];
 
       objectsRef.current = objectsRef.current
@@ -372,12 +387,18 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
         
         indicatorsRef.current.forEach(ind => {
           if (ind.userData?.isRotationRing) {
-            ind.position.copy(selectedObject.position);
+            const box = new THREE.Box3().setFromObject(selectedObject);
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            ind.position.copy(center);
           }
         });
 
         selectedOutlineRef.current.forEach(outline => {
-          outline.position.copy(selectedObject.position);
+          const box = new THREE.Box3().setFromObject(selectedObject);
+          const center = new THREE.Vector3();
+          box.getCenter(center);
+          outline.position.copy(center);
           outline.rotation.copy(selectedObject.rotation);
         });
       }
@@ -387,6 +408,7 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
         
         if (raycaster.ray.intersectPlane(dragPlaneRef.current, intersectionPointRef.current)) {
           selectedObject.position.copy(intersectionPointRef.current);
+          selectedObject.updateMatrixWorld(true);
           
           if (selectedObject.userData.originalY !== undefined) {
             selectedObject.position.y = selectedObject.userData.originalY;
@@ -395,7 +417,10 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
           createIndicators(selectedObject);
           
           selectedOutlineRef.current.forEach(outline => {
-            outline.position.copy(selectedObject.position);
+            const box = new THREE.Box3().setFromObject(selectedObject);
+            const center = new THREE.Vector3();
+            box.getCenter(center);
+            outline.position.copy(center);
           });
         }
       }

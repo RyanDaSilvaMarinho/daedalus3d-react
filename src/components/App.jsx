@@ -66,32 +66,36 @@ const App = () => {
   const handleBooleanOperation = (operation) => {
     if (selectedIds.length === 2) {
       let result;
-      switch(operation) {
-        case 'union':
-          result = canvasRef.current.performUnion(selectedIds);
-          break;
-        case 'difference':
-          result = canvasRef.current.performDifference(selectedIds);
-          break;
-        case 'intersection':
-          result = canvasRef.current.performIntersection(selectedIds);
-          break;
-        default:
-          console.error('Operação desconhecida');
-          return;
-      }
-      
-      if (result) {
-        setObjects(prev => [
-          ...prev.filter(obj => !selectedIds.includes(obj.id)),
-          {
-            id: result.newId,
-            type: operation,
-            color: '#ff8800',
-            position: result.position
-          }
-        ]);
-        setSelectedIds([]);
+      try {
+        switch(operation) {
+          case 'union':
+            result = canvasRef.current.performUnion(selectedIds);
+            break;
+          case 'difference':
+            result = canvasRef.current.performDifference(selectedIds);
+            break;
+          case 'intersection':
+            result = canvasRef.current.performIntersection(selectedIds);
+            break;
+          default:
+            console.error('Operação desconhecida');
+            return;
+        }
+        
+        if (result) {
+          setObjects(prev => [
+            ...prev.filter(obj => !selectedIds.includes(obj.id)),
+            {
+              id: result.newId,
+              type: operation,
+              color: '#FF00FF',
+              position: result.position
+            }
+          ]);
+          setSelectedIds([]);
+        }
+      } catch (error) {
+        alert(error.message || 'Erro na operação booleana');
       }
     }
   };
