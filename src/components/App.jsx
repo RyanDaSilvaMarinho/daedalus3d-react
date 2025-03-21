@@ -22,14 +22,28 @@ const App = () => {
 
   useEffect(() => {
     if (location.state?.projectId) {
-      const projects = JSON.parse(localStorage.getItem('projects')) || [];
-      const project = projects.find(p => p.id === location.state.projectId);
-      setObjects(project.data.objects || []);
-      setModelFile(project.data.modelFile || null);
-      setObjModelFile(project.data.objModelFile || null);
-      id.current = project.id;
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+      const users = JSON.parse(localStorage.getItem('users')) || [];
+  
+      if (currentUser) {
+        const user = users.find(u => u.username === currentUser.username);
+  
+        if (user) {
+          const project = user.projects.find(p => p.id === location.state.projectId);
+  
+          if (project) {
+            setObjects(project.data.objects || []);
+            setModelFile(project.data.modelFile || null);
+            setObjModelFile(project.data.objModelFile || null);
+            id.current = project.id;
+          } else {
+            console.error('Projeto não encontrado');
+            navigate('/home');
+          }
+        }
+      }
     }
-  }, [location.state]);
+  }, [location.state, navigate]);
 
   const handleAddObject = (type, color = '#00ff88') => {
     const newObject = {
@@ -101,27 +115,41 @@ const App = () => {
   };
 
   const saveCurrentProject = useCallback(() => {
-    const projects = JSON.parse(localStorage.getItem('projects')) || [];
-    let project = null;
-    
-    if (id.current <= 0) {
-      const projectNumber = projects.length + 1;
-      project = {
-        id: Date.now(),
-        name: `Projeto ${projectNumber}`,
-        date: new Date().toISOString(),
-        data: { objects, modelFile, objModelFile },
-      };
-      id.current = project.id;
-      projects.push(project);
-    } else {
-      project = projects.find(p => p.id === id.current);
-      project.date = new Date().toISOString();
-      project.data = { objects, modelFile, objModelFile };
-      const index = projects.findIndex(p => p.id === id.current);
-      projects[index] = project;
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+  
+    if (currentUser) {
+      const userIndex = users.findIndex(u => u.username === currentUser.username);
+  
+      if (userIndex !== -1) {
+        const project = {
+          id: id.current || Date.now(), // Usa o ID existente ou gera um novo
+          name: `Projeto ${users[userIndex].projects.length + 1}`, // Nome do projeto
+          date: new Date().toISOString(), // Data de criação
+          data: { 
+            objects, // Objetos 3D
+            modelFile, // Arquivo de modelo (se houver)
+            objModelFile // Arquivo OBJ (se houver)
+          },
+        };
+  
+        // Verifica se o projeto já existe no histórico do usuário
+        const projectIndex = users[userIndex].projects.findIndex(p => p.id === project.id);
+  
+        if (projectIndex !== -1) {
+          // Atualiza o projeto existente
+          users[userIndex].projects[projectIndex] = project;
+        } else {
+          // Adiciona um novo projeto ao histórico do usuário
+          users[userIndex].projects.push(project);
+        }
+  
+        // Atualiza o localStorage com os novos dados do usuário
+        localStorage.setItem('users', JSON.stringify(users));
+  
+        alert('Projeto salvo altomaticamente!');
+      }
     }
-    localStorage.setItem('projects', JSON.stringify(projects));
   }, [objects, modelFile, objModelFile]);
 
   useEffect(() => {
@@ -215,7 +243,7 @@ const App = () => {
 
       <div className='home-profile'></div>
       <div className='home-options'>
-        <button className='home-button' onClick={() => {saveCurrentProject(); navigate('/')}}>
+        <button className='home-button' onClick={() => {saveCurrentProject(); navigate('/Home')}}>
           🏠 Inicio
         </button>
         <button className='exit-box' onClick={() => {saveCurrentProject(); navigate('/')}}>
