@@ -48,7 +48,6 @@ const Toolbar = ({
           onClick={() => onBooleanOperation('union')}
           disabled={!canOperate}
           title="União"
-          style={canOperate ? {background: 'rgba(0, 255, 136, 0.2)'} : {}}
         >
           ∪
         </button>
@@ -57,7 +56,6 @@ const Toolbar = ({
           onClick={() => onBooleanOperation('difference')}
           disabled={!canOperate}
           title="Diferença"
-          style={canOperate ? {background: 'rgba(255, 136, 0, 0.2)'} : {}}
         >
           −
         </button>
@@ -66,16 +64,9 @@ const Toolbar = ({
           onClick={() => onBooleanOperation('intersection')}
           disabled={!canOperate}
           title="Interseção"
-          style={canOperate ? {background: 'rgba(0, 136, 255, 0.2)'} : {}}
         >
           ∩
         </button>
-        
-        {selectedCount > 0 && (
-          <div className="selection-indicator">
-            {selectedCount} selecionado{selectedCount > 1 ? 's' : ''}
-          </div>
-        )}
       </div>
       
       <button
