@@ -3,7 +3,8 @@ import React, { useRef } from 'react';
 const Toolbar = ({ 
   onAddObject, 
   showObjectPanel, 
-  onBooleanOperation, 
+  onBooleanOperation,
+  onDelete, 
   canOperate, 
   selectedCount,
   onRotate, 
@@ -11,7 +12,9 @@ const Toolbar = ({
   onSaveProject, 
   onExportOBJ,
   routeChange,
-  rotateMode
+  rotateMode,
+  scaleMode,
+  onScale 
 }) => {
   const fileInputRef = useRef(null);
 
@@ -41,7 +44,14 @@ const Toolbar = ({
       >
         +
       </button>
-      
+      <button
+        className="tool-button"
+        onClick={onDelete}
+        title="Excluir Objeto Selecionado"
+        disabled={selectedCount === 0}
+      >
+        🗑️
+      </button>
       <div className="boolean-operations">
         <button
           className="tool-button"
@@ -83,10 +93,22 @@ const Toolbar = ({
       </button>
       <button
         className="tool-button"
+        onClick={onScale} // Botão de redimensionamento
+        title="Redimensionar"
+        style={scaleMode ? { 
+          backgroundColor: '#00ff88', 
+          color: '#000',
+          transform: 'scale(1.1)' 
+        } : {}}
+      >
+        ⇲
+      </button>
+      <button
+        className="tool-button"
         onClick={handleFileImport}
         title="Importar OBJ"
       >
-        ⬇️ 
+        ⬇ 
       </button>
       <input
         type="file"
@@ -120,4 +142,4 @@ const Toolbar = ({
   );
 };
 
-export default Toolbar;
+export default Toolbar;

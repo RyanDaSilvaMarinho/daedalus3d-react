@@ -58,6 +58,10 @@ const App = () => {
     };
     setObjects(prev => [...prev, newObject]);
   };
+  const handleDeleteObjects = () => {
+    setObjects(prev => prev.filter(obj => !selectedIds.includes(obj.id)));
+    setSelectedIds([]);
+  };
 
   const handleModelUpload = (e) => {
     const file = e.target.files[0];
@@ -103,7 +107,7 @@ const App = () => {
               id: result.newId,
               type: operation,
               color: '#FF00FF',
-              position: result.position
+              position: result.position // Garantir que é um array [x, y, z]
             }
           ]);
           setSelectedIds([]);
@@ -113,6 +117,7 @@ const App = () => {
       }
     }
   };
+  
 
   const saveCurrentProject = useCallback(() => {
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -147,23 +152,23 @@ const App = () => {
         // Atualiza o localStorage com os novos dados do usuário
         localStorage.setItem('users', JSON.stringify(users));
   
-        alert('Projeto salvo altomaticamente!');
+        //alert('Projeto salvo altomaticamente!');
       }
     }
   }, [objects, modelFile, objModelFile]);
 
   useEffect(() => {
-    if(objects.length === 0) return;
-    if(!isMounted.current) {
+    if (objects.length === 0 && !isMounted.current) {
       isMounted.current = true;
-      return;
+      return;  
     }
     saveCurrentProject();
-  }, [objects, modelFile, objModelFile, saveCurrentProject]);
+  }, [objects, modelFile, objModelFile,selectedIds,saveCurrentProject]);
 
   const manualSave = () => {
     saveCurrentProject();
-    alert('Projeto salvo com sucesso!');
+
+    //alert('Projeto salvo com sucesso!');
   };
 
   const handleExportOBJ = () => {
@@ -208,6 +213,7 @@ const App = () => {
           onRotate={() => setRotateMode(prev => !prev)}
           rotateMode={rotateMode}
           selectedCount={selectedIds.length}
+          onDelete={handleDeleteObjects}
         />
         <Canvas
           ref={canvasRef}
