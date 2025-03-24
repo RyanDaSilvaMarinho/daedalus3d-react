@@ -232,7 +232,7 @@ body {
   backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
-  height: 40%;
+  height: 50%;
   align-items: center;
   padding: 1rem 0;
   gap: 1rem;
@@ -311,13 +311,10 @@ body {
   background-color: #00000033;
 }
 
-
-
-
 #object-panel {
   position: fixed;
-  top: 18vh;
-  right: 16.5vw;
+  top: 13vh;
+  right: 23.6vw;
   width: 240px;
   background-color: #030F0F;
   border: 1px solid #0D838333;
@@ -400,7 +397,7 @@ body {
 
 textarea {
   width: 100%;
-  min-height: 80px;
+  min-height: 180px;
   background: #0D838333;
   color: white;
   border: none;
