@@ -93,6 +93,68 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
     indicatorsRef.current.push(arrowX, arrowY, arrowZ, xRing, yRing, zRing);
   }, [rotateMode]);
 
+  const createScalingIndicators = useCallback((object) => {
+    const scene = sceneRef.current;
+    
+    // Remove indicadores antigos
+    indicatorsRef.current.forEach(ind => scene.remove(ind));
+    indicatorsRef.current = [];
+  
+    const box = new THREE.Box3().setFromObject(object);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+  
+    // Cria setas maiores para escala
+    const arrowLength = 2.5;
+    const arrowHead = 0.5;
+    
+    const arrowX = new THREE.ArrowHelper(
+      new THREE.Vector3(1, 0, 0),
+      center,
+      arrowLength,
+      0xff0000,
+      arrowHead
+    );
+    
+    const arrowY = new THREE.ArrowHelper(
+      new THREE.Vector3(0, 1, 0),
+      center,
+      arrowLength,
+      0x00ff00,
+      arrowHead
+    );
+    
+    const arrowZ = new THREE.ArrowHelper(
+      new THREE.Vector3(0, 0, 1),
+      center,
+      arrowLength,
+      0x0000ff,
+      arrowHead
+    );
+  
+    // Adiciona cubos nas pontas das setas
+    const cubeGeometry = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+    
+    const cubeX = new THREE.Mesh(cubeGeometry, new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+    cubeX.position.set(center.x + arrowLength, center.y, center.z);
+    
+    const cubeY = new THREE.Mesh(cubeGeometry, new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
+    cubeY.position.set(center.x, center.y + arrowLength, center.z);
+    
+    const cubeZ = new THREE.Mesh(cubeGeometry, new THREE.MeshBasicMaterial({ color: 0x0000ff }));
+    cubeZ.position.set(center.x, center.y, center.z + arrowLength);
+  
+    // Marca os elementos como indicadores de escala
+    [arrowX, arrowY, arrowZ, cubeX, cubeY, cubeZ].forEach(obj => {
+      obj.userData.isScalingIndicator = true;
+      obj.userData.axis = obj === arrowX || obj === cubeX ? 'x' :
+                          obj === arrowY || obj === cubeY ? 'y' : 'z';
+    });
+  
+    scene.add(arrowX, arrowY, arrowZ, cubeX, cubeY, cubeZ);
+    indicatorsRef.current.push(arrowX, arrowY, arrowZ, cubeX, cubeY, cubeZ);
+  }, []);  
+
   const highlightObject = useCallback((object, isSelected) => {
     if (!object) return;
 
@@ -337,7 +399,10 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
         const raycaster = new THREE.Raycaster();
         raycaster.setFromCamera(mousePositionRef.current, cameraRef.current);
         
-        const intersects = raycaster.intersectObjects(objectsRef.current);
+        const scaleIndicators = indicatorsRef.current.filter(
+          obj => obj.userData?.isScalingIndicator
+        );
+        const intersects = raycaster.intersectObjects(scaleIndicators);
         
         if (intersects.length > 0) {
           const mesh = intersects[0].object;
@@ -346,6 +411,14 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
           initialScale.current.copy(mesh.scale);
           setIsScaling(true);
           controlsRef.current.enabled = false;
+        }
+        const objectIntersects = raycaster.intersectObjects(objectsRef.current);
+      
+        if (objectIntersects.length > 0) {
+          const mesh = objectIntersects[0].object;
+          setSelectedObject(mesh);
+          createScalingIndicators(mesh);
+          highlightObject(mesh, true);
         }
       }
       if (!rotateMode) return;
@@ -488,7 +561,7 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-  }, [isRotating, isDragging, selectedObject, rotateMode, createIndicators,scaleMode, isScaling]);
+  }, [isRotating, isDragging, selectedObject, rotateMode, createIndicators,scaleMode, isScaling,createScalingIndicators,highlightObject]);
 
   useEffect(() => {
     if (!scaleMode) {

@@ -28,13 +28,13 @@ const ObjectPanel = ({ show, onSelectType }) => {
 
       <div>
         <button onClick={() => handleAddWithColor('cube')} className="shape-btn">
-          Cubo
+          <img src="Criar_Cubo.png" alt="Criar cubo"/>
         </button>
         <button onClick={() => handleAddWithColor('sphere')} className="shape-btn">
-          Esfera
+          <img src="Criar_Esfera.png" alt="Criar esfera"/>
         </button>
         <button onClick={() => handleAddWithColor('cylinder')} className="shape-btn">
-          Cilindro
+          <img src="Criar_Cilindro.png" alt="Criar Cilindro"/>
         </button>
       </div>
     </div>

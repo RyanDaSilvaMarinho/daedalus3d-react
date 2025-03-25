@@ -256,7 +256,8 @@ const App = () => {
       <div className='home-profile'></div>
       <div className='home-options'>
         <button className='home-button' onClick={() => {saveCurrentProject(); navigate('/Home')}}>
-          🏠 Inicio
+        <img src="inicio.svg" alt="Inicio"/>
+        <ul>Inicio</ul>
         </button>
         <button className='exit-box' onClick={() => {saveCurrentProject(); navigate('/')}}>
           Sair <img src='Icon-logout.svg' alt="Sair"/>
