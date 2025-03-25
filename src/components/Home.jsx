@@ -28,7 +28,7 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      <img className="logo" src="kp-logo-placeholder.png" alt="Logo" />
+      <img className="logo" src="logo.png" alt="Logo" />
       <div className="home-projects">
         <div className="home-recent">
           <div className="home-new">

@@ -173,7 +173,7 @@ body {
   top: 2.22vh;
   left: calc(49.87vw - 11.525vh);
   width: 23.05vh;
-  height: 6.66vh;
+  height: 4vh;
 }
 
 .menu {
@@ -228,7 +228,7 @@ body {
 
 .sidebar {
   width: 50px;
-  background: rgba(11, 31, 31, 0.8);
+  background: #5B8181;
   backdrop-filter: blur(10px);
   display: flex;
   flex-direction: column;
@@ -264,7 +264,6 @@ body {
 
 .properties-panel {
   width: 300px;
-  background: rgba(11, 31, 31, 0.8);
   backdrop-filter: blur(10px);
   padding: 1rem;
   border-radius: 12px;
@@ -278,11 +277,10 @@ body {
   height: 70vh;
   z-index: 10;
   overflow-y: auto;
-  border: 1px solid #0D838333;
 }
 
 .properties-card {
-  background-color: #5B818133;
+  background-color:#5B8181;
   padding: 1rem;
   border-radius: 8px;
 }
@@ -301,6 +299,7 @@ body {
   font-family: 'Open Sans';
   align-content: right;
   padding: 1rem;
+
 }
 
 .exit-box:hover{
@@ -398,7 +397,7 @@ body {
 textarea {
   width: 100%;
   min-height: 180px;
-  background: #0D838333;
+  background: #1B2727;
   color: white;
   border: none;
   padding: 0.5rem;

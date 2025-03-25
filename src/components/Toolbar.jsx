@@ -93,7 +93,7 @@ const Toolbar = ({
       </button>
       <button
         className="tool-button"
-        onClick={onScale} // Botão de redimensionamento
+        onClick={onScale}
         title="Redimensionar"
         style={scaleMode ? { 
           backgroundColor: '#00ff88', 

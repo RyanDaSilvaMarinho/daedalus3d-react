@@ -13,9 +13,11 @@ const App = () => {
   const [objModelFile, setObjModelFile] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [rotateMode, setRotateMode] = useState(false);
+  const [scaleMode, setScaleMode] = useState(false);
   const canvasRef = useRef();
   const id = useRef(-1);
   const isMounted = useRef(false);
+  
   
   let navigate = useNavigate();
   const location = useLocation();
@@ -199,6 +201,7 @@ const App = () => {
 
   return (
     <div className="app-container">
+      <img className="logo" src="logo.png" alt="Logo" />
       <div className="main-content">
         <ProjectTabs />
         <Toolbar
@@ -214,6 +217,8 @@ const App = () => {
           rotateMode={rotateMode}
           selectedCount={selectedIds.length}
           onDelete={handleDeleteObjects}
+          onScale={() => setScaleMode(prev => !prev)}
+          scaleMode={scaleMode}
         />
         <Canvas
           ref={canvasRef}
@@ -222,6 +227,7 @@ const App = () => {
           objModelFile={objModelFile}
           onSelectObject={handleSelectObject}
           rotateMode={rotateMode}
+          scaleMode={scaleMode}
         />
       </div>
       

@@ -6,7 +6,7 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { CSG } from 'three-csg-ts';
 import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter';
 
-const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, rotateMode }, ref) => {
+const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, rotateMode, scaleMode }, ref) => {
   const canvasRef = useRef(null);
   const sceneRef = useRef(new THREE.Scene());
   const cameraRef = useRef();
@@ -315,6 +315,10 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
     };
   }, []);
 
+  const [isScaling, setIsScaling] = useState(false);
+  const scaleStartPoint = useRef(new THREE.Vector2());
+  const initialScale = useRef(new THREE.Vector3());
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -327,6 +331,23 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
     };
 
     const onMouseDown = (e) => {
+      if (scaleMode) {
+        updateMousePosition(e);
+        
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(mousePositionRef.current, cameraRef.current);
+        
+        const intersects = raycaster.intersectObjects(objectsRef.current);
+        
+        if (intersects.length > 0) {
+          const mesh = intersects[0].object;
+          setSelectedObject(mesh);
+          scaleStartPoint.current.copy(mousePositionRef.current);
+          initialScale.current.copy(mesh.scale);
+          setIsScaling(true);
+          controlsRef.current.enabled = false;
+        }
+      }
       if (!rotateMode) return;
 
       updateMousePosition(e);
@@ -358,6 +379,24 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
     };
 
     const onMouseMove = (e) => {
+      if (isScaling && selectedObject) {
+        updateMousePosition(e);
+        
+        // Calcula a diferença de movimento vertical
+        const deltaY = mousePositionRef.current.y - scaleStartPoint.current.y;
+        
+        // Aplica o fator de escala (ajuste a sensibilidade conforme necessário)
+        const scaleFactor = 1 + deltaY * 0.75;
+        
+        // Mantém a escala proporcional
+        selectedObject.scale.set(
+          initialScale.current.x * scaleFactor,
+          initialScale.current.y * scaleFactor,
+          initialScale.current.z * scaleFactor
+        );
+        
+        selectedObject.updateMatrixWorld(true);
+      }
       if (!rotateMode) return;
 
       updateMousePosition(e);
@@ -427,6 +466,10 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
     };
 
     const onMouseUp = () => {
+      if (isScaling) {
+        setIsScaling(false);
+        controlsRef.current.enabled = true;
+      }
       if (isRotating || isDragging) {
         controlsRef.current.enabled = true;
       }
@@ -445,7 +488,14 @@ const Canvas = forwardRef(({ objects, modelFile, objModelFile, onSelectObject, r
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
     };
-  }, [isRotating, isDragging, selectedObject, rotateMode, createIndicators]);
+  }, [isRotating, isDragging, selectedObject, rotateMode, createIndicators,scaleMode, isScaling]);
+
+  useEffect(() => {
+    if (!scaleMode) {
+      setIsScaling(false);
+      setSelectedObject(null);
+    }
+  }, [scaleMode]);
 
   useEffect(() => {
     const handleClick = (event) => {
