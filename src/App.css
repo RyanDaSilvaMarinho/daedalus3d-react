@@ -294,12 +294,12 @@ body {
 .exit-box{
   font-size: 1.2rem;
   border: #FFFFFF00;
+  display:flex;
   background-color: #FFFFFF00;
   color: #ffffff;
   font-family: 'Open Sans';
   align-content: right;
   padding: 1rem;
-
 }
 
 .exit-box:hover{
@@ -453,8 +453,6 @@ textarea {
 .generate-button:hover {
   opacity: 0.9;
 }
-
-
 
 .login-container {
   display: flex;

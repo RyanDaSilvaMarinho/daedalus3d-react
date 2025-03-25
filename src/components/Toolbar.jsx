@@ -11,7 +11,6 @@ const Toolbar = ({
   onOBJUpload, 
   onSaveProject, 
   onExportOBJ,
-  routeChange,
   rotateMode,
   scaleMode,
   onScale 
@@ -42,7 +41,7 @@ const Toolbar = ({
         onClick={() => onAddObject(!showObjectPanel)}
         title="Adicionar Objeto"
       >
-        +
+        <img src='Criar_Formas.png' alt="Criar forma"/>
       </button>
       <button
         className="tool-button"
@@ -50,7 +49,7 @@ const Toolbar = ({
         title="Excluir Objeto Selecionado"
         disabled={selectedCount === 0}
       >
-        🗑️
+        <img src='Excluir_Objetos.png' alt="Exluir Objetos"/>
       </button>
       <div className="boolean-operations">
         <button
@@ -59,7 +58,7 @@ const Toolbar = ({
           disabled={!canOperate}
           title="União"
         >
-          ∪
+          <img src='Unir_Objetos.png' alt="Unir dois objetos"/>
         </button>
         <button
           className="tool-button"
@@ -67,7 +66,7 @@ const Toolbar = ({
           disabled={!canOperate}
           title="Diferença"
         >
-          −
+          <img src="Subtração.png" alt="Subtração de duas formas"/>
         </button>
         <button
           className="tool-button"
@@ -75,7 +74,7 @@ const Toolbar = ({
           disabled={!canOperate}
           title="Interseção"
         >
-          ∩
+          <img src ='Intersecção_Formas.png' alt= "Intersecção entre duas formas"/>
         </button>
       </div>
       
@@ -89,7 +88,7 @@ const Toolbar = ({
           transform: 'scale(1.1)' 
         } : {}}
       >
-        ↻
+        <img src ="rotacionar.png" alt = "Rotacionar Formas"/>
       </button>
       <button
         className="tool-button"
@@ -101,14 +100,14 @@ const Toolbar = ({
           transform: 'scale(1.1)' 
         } : {}}
       >
-        ⇲
+        <img src='Redimensionar_Daedalus.png' alt="redimensionar"/>
       </button>
       <button
         className="tool-button"
         onClick={handleFileImport}
         title="Importar OBJ"
       >
-        ⬇ 
+        <img src="Importar_Objetos.png" alt="Importar Objetos"/> 
       </button>
       <input
         type="file"
@@ -122,21 +121,14 @@ const Toolbar = ({
         onClick={onSaveProject}
         title="Salvar Projeto"
       >
-        💾
+        <img src='Salvar_Daedalus.png' alt="Salvar Projeto"/>
       </button>
       <button
         className="tool-button"
         onClick={onExportOBJ}
         title="Exportar OBJ"
       >
-        📥
-      </button>
-      <button
-        className="tool-button"
-        onClick={routeChange}
-        title="Voltar ao Início"
-      >
-        🏠
+        <img src="Exportar_Objeto.png" alt="Exportar o projeto"/>
       </button>
     </div>
   );
