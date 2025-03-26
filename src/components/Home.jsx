@@ -8,22 +8,21 @@ const Home = () => {
 
   // Carrega os projetos do usuário atual ao montar o componente
   useEffect(() => {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-
-    if (currentUser) {
-      const user = users.find(u => u.username === currentUser.username);
-      if (user) {
-        setProjects(user.projects); // Define os projetos do usuário
-      }
-    } else {
-      navigate('/'); // Redireciona para o login se não houver usuário logado
-    }
+    fetch("/getproject")
+    .then(r => r.json())
+    .then(r => {setProjects(r)}); // Define os projetos do usuário
   }, [navigate]);
 
   // Função para abrir um projeto
   const openProject = (projectId) => {
-    navigate('/App', { state: { projectId } });
+    const requestOptions = {
+      method: 'POST',
+      redirect: 'follow',
+      headers: {'Content-type': 'application/json'},
+      body: JSON.stringify({id : projectId})
+    }
+    fetch("lockproject",requestOptions)
+    .then((r) => { navigate('/App')});
   };
 
   return (
@@ -34,7 +33,7 @@ const Home = () => {
           <div className="home-new">
             <button
               className="new-project"
-              onClick={() => navigate('/App')} // Navega para a página de criação de projetos
+              onClick={() => navigate('/App', {state: true})} // Navega para a página de criação de projetos
             >
               +
             </button>

@@ -15,7 +15,7 @@ const App = () => {
   const [rotateMode, setRotateMode] = useState(false);
   const [scaleMode, setScaleMode] = useState(false);
   const canvasRef = useRef();
-  const id = useRef(-1);
+  const id = useRef(false);
   const isMounted = useRef(false);
   
   
@@ -23,27 +23,15 @@ const App = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.state?.projectId) {
-      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-      const users = JSON.parse(localStorage.getItem('users')) || [];
-  
-      if (currentUser) {
-        const user = users.find(u => u.username === currentUser.username);
-  
-        if (user) {
-          const project = user.projects.find(p => p.id === location.state.projectId);
-  
-          if (project) {
-            setObjects(project.data.objects || []);
-            setModelFile(project.data.modelFile || null);
-            setObjModelFile(project.data.objModelFile || null);
-            id.current = project.id;
-          } else {
-            console.error('Projeto não encontrado');
-            navigate('/home');
-          }
-        }
-      }
+    if (!location.state){
+      id.current = -1
+      fetch("/loadproject")
+        .then(r => r.json())
+        .then(proj => {
+          setObjects(proj.data.objects);
+          setModelFile(proj.data.modelFile);
+          setObjModelFile(proj.data.objModelFile);
+          id.current = proj.id;})
     }
   }, [location.state, navigate]);
 
@@ -122,41 +110,31 @@ const App = () => {
   
 
   const saveCurrentProject = useCallback(() => {
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-  
-    if (currentUser) {
-      const userIndex = users.findIndex(u => u.username === currentUser.username);
-  
-      if (userIndex !== -1) {
-        const project = {
-          id: id.current || Date.now(), // Usa o ID existente ou gera um novo
-          name: `Projeto ${users[userIndex].projects.length + 1}`, // Nome do projeto
-          date: new Date().toISOString(), // Data de criação
-          data: { 
-            objects, // Objetos 3D
-            modelFile, // Arquivo de modelo (se houver)
-            objModelFile // Arquivo OBJ (se houver)
-          },
-        };
-  
-        // Verifica se o projeto já existe no histórico do usuário
-        const projectIndex = users[userIndex].projects.findIndex(p => p.id === project.id);
-  
-        if (projectIndex !== -1) {
-          // Atualiza o projeto existente
-          users[userIndex].projects[projectIndex] = project;
-        } else {
-          // Adiciona um novo projeto ao histórico do usuário
-          users[userIndex].projects.push(project);
-        }
-  
-        // Atualiza o localStorage com os novos dados do usuário
-        localStorage.setItem('users', JSON.stringify(users));
-  
-        //alert('Projeto salvo altomaticamente!');
+    if(id.current !== -1){
+      const project = {
+        id: id.current || Date.now(), // Usa o ID existente ou gera um novo
+        name: `Projeto`, // Nome do projeto
+        date: new Date().toISOString(), // Data de criação
+        data: { 
+          objects, // Objetos 3D
+          modelFile, // Arquivo de modelo (se houver)
+          objModelFile // Arquivo OBJ (se houver)
+        },
+
+      };
+
+      id.current = project.id;
+
+      const requestOptions = {
+        method: 'POST',
+        redirect: 'follow',
+        headers: {'Content-type': 'application/json'},
+        body: JSON.stringify(project)
       }
+
+      fetch("/saveproject", requestOptions)
     }
+    //alert('Projeto salvo altomaticamente!');
   }, [objects, modelFile, objModelFile]);
 
   useEffect(() => {

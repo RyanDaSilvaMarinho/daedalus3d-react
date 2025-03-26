@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../App.css';
 
 const Register = () => {
+  const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -15,30 +16,24 @@ const Register = () => {
       setError('Por favor, insira um nome de usuário.');
       return;
     }
-
-    // Verifica se o usuário já existe
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const userExists = users.some(u => u.username === username);
-
-    if (userExists) {
-      setError('Nome de usuário já cadastrado.');
+    if (!password) {
+      setError('Por favor, insira uma senha.');
       return;
     }
 
-    // Cria um novo usuário
-    const newUser = {
-      id: Date.now(), // ID único
-      username,
-      projects: [], // Histórico de projetos vazio
-    };
+    const requestOptions = {
+      method: 'POST',
+      redirect: 'follow',
+      headers: {'Content-type': 'application/json'},
+      body: JSON.stringify({user:username, pass:password})
+    }
+    fetch('/tryregister',requestOptions)
+    .then(response => {
+      if (response.redirected) {
+        window.location.href = response.url;
+      }
+    })
 
-    // Salva o usuário no localStorage
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-
-    setSuccess('Usuário cadastrado com sucesso!');
-    setError('');
-    setTimeout(() => navigate('/'), 2000); // Redireciona para a tela de login após 2 segundos
   };
 
   return (
@@ -54,6 +49,13 @@ const Register = () => {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+            <label>Senha:</label>
+            <input
+              type="text"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
