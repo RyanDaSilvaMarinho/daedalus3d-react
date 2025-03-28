@@ -77,19 +77,6 @@ const Toolbar = ({
           <img src ='Intersecção_Formas.png' alt= "Intersecção entre duas formas"/>
         </button>
       </div>
-      
-      <button
-        className="tool-button"
-        onClick={onRotate}
-        title="Rotacionar"
-        style={rotateMode ? { 
-          backgroundColor: '#00ff88', 
-          color: '#000',
-          transform: 'scale(1.1)' 
-        } : {}}
-      >
-        <img src ="rotacionar.png" alt = "Rotacionar Formas"/>
-      </button>
       <button
         className="tool-button"
         onClick={onScale}
@@ -101,6 +88,18 @@ const Toolbar = ({
         } : {}}
       >
         <img src='Redimensionar_Daedalus.png' alt="redimensionar"/>
+      </button>
+      <button
+        className="tool-button"
+        onClick={onRotate}
+        title="Rotacionar"
+        style={rotateMode ? { 
+          backgroundColor: '#00ff88', 
+          color: '#000',
+          transform: 'scale(1.1)' 
+        } : {}}
+      >
+        <img src ="rotacionar.png" alt = "Rotacionar Formas"/>
       </button>
       <button
         className="tool-button"
@@ -118,17 +117,17 @@ const Toolbar = ({
       />
       <button
         className="tool-button"
-        onClick={onSaveProject}
-        title="Salvar Projeto"
-      >
-        <img src='Salvar_Daedalus.png' alt="Salvar Projeto"/>
-      </button>
-      <button
-        className="tool-button"
         onClick={onExportOBJ}
         title="Exportar OBJ"
       >
         <img src="Exportar_Objeto.png" alt="Exportar o projeto"/>
+      </button>
+      <button
+        className="tool-button"
+        onClick={onSaveProject}
+        title="Salvar Projeto"
+      >
+        <img src='Salvar_Daedalus.png' alt="Salvar Projeto"/>
       </button>
     </div>
   );

@@ -22,15 +22,14 @@ const ProjectTabs = () => {
   const textStyle = {
     fontSize: '20px',
     fontWeight: 'bold',
-    fontFamily: 'Open Sans, Arial, sans-serif',
+    fontFamily: 'Open Sans, regular',
     letterSpacing: '0.5px',
-    margin: 0,
-    textTransform: 'uppercase'
+    margin: 0
   };
 
   return (
     <div id="ambiente-modelagem" style={containerStyle}>
-      <h6 style={textStyle}>ambiente de trabalho</h6>
+      <h6 style={textStyle}>Ambiente de Trabalho</h6>
     </div>
   );
 };
